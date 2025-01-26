@@ -1,9 +1,12 @@
+import express from 'express';
+
 interface Options {
     port: number;
     publicPath: string;
 }
 
 export class Server {
+    private readonly app = express();
     private readonly port: number;
     private readonly publicPath: string;
 
@@ -15,6 +18,11 @@ export class Server {
     };
 
     async start(){
-        console.log(`server running on port ${this.port}`);
+        
+        this.app.use(express.static(this.publicPath));
+
+        this.app.listen(this.port, () =>{
+            console.log(`Server running on port ${this.port}`)
+        });
     }
 }
