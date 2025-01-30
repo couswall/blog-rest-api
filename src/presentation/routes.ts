@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { BlogRoutes } from "./blogs/routes";
+import { BlogRoutes } from "@presentation/blogs/routes";
+import { UserRoutes } from "@presentation/users/routes";
 
 
 export class AppRoutes {
@@ -8,6 +9,7 @@ export class AppRoutes {
 
         const router = Router();
 
+        router.use('/api/users', UserRoutes.routes);
         router.use('/api/blogs', BlogRoutes.routes);
 
         return router;
