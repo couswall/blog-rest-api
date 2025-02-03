@@ -34,6 +34,12 @@ export class UserDatasourceImpl implements UserDatasource {
     }
 
     async deleteById(id: number): Promise<UserEntity> {
-        throw new Error("Method not implemented.");
+        const user = await this.findById(id);
+
+        if(!user) throw new CustomError(`User with id ${id} not found`, 400);
+
+        const deletedUser = await prisma.user.delete({where: {id}});
+
+        return UserEntity.fromObject(deletedUser);
     }
 }

@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import { CreateUserDto } from "@/domain/dtos";
 import { CustomError } from "@/domain/errors/custom.error";
 import { UserRepository } from "@/domain/repositories/user.repository";
-import { CreateUser } from "@/domain/use-cases/user/create-user";
-
+import { CreateUser, DeleteUser } from "@/domain/use-cases/user";
 
 export class UserController {
     constructor(
@@ -34,7 +33,16 @@ export class UserController {
     };
 
     public deleteUser = (req: Request, res: Response) => {
-        res.json({message: 'delete user'});
-        return;
+        const id = +req.params.id;
+        
+        if(isNaN(id)){
+            res.status(400).json({error: 'ID argument is not a number'});
+            return;
+        };
+
+        new DeleteUser(this.userRepository)
+            .execute(id)
+            .then(user => res.status(200).json(user))
+            .catch(error => this.handleError(res, error))
     }
 }
