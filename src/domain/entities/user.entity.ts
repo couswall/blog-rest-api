@@ -1,3 +1,8 @@
+import { ICreateUser } from "../dtos/interfaces";
+
+export interface ICreateUserEntity extends ICreateUser{
+    id: number;
+}
 
 export class UserEntity {
 
@@ -8,4 +13,9 @@ export class UserEntity {
         public password: string,
     ){};
     
+    public static fromObject(object: ICreateUserEntity){
+        const {username, password, email, id} = object;
+
+        return new UserEntity(id, username, email, password);
+    }
 }
