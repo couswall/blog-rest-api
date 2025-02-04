@@ -1,6 +1,7 @@
 import { CreateUserDto } from "@/domain/dtos";
-import { UserEntity } from '../../entities/user.entity';
+import { UserEntity } from '@src/domain/entities/user.entity';
 import { UserRepository } from "@/domain/repositories/user.repository";
+import { BcryptAdapter } from "@/config/bcrypt.adapter";
 
 export interface CreateUserUseCase {
     execute(dto: CreateUserDto): Promise<UserEntity>;
@@ -12,6 +13,11 @@ export class CreateUser implements CreateUserUseCase{
     ){}
 
     execute(dto: CreateUserDto): Promise<UserEntity> {
-        return this.repository.create(dto);
+        const newDto = new CreateUserDto(
+            dto.username, 
+            dto.email, 
+            BcryptAdapter.hash(dto.username)
+        );
+        return this.repository.create(newDto);
     }
 }

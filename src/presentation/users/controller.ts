@@ -11,7 +11,12 @@ export class UserController {
 
     private handleError = (res: Response, error: unknown) => {
         if (error instanceof CustomError) {
-            res.status(error.statusCode).json({error: error.message});
+            res.status(error.statusCode).json({
+                success: false,
+                error: {
+                    message: error.message
+                }
+            });
             return;
         };
         
@@ -22,13 +27,23 @@ export class UserController {
     public createUser = (req: Request, res: Response) => {
         const [errorMessages, dto] = CreateUserDto.create(req.body);
         if (errorMessages) {
-            res.status(400).json({errorMessages});
+            res.status(400).json({
+                status: false,
+                error: {
+                    message: 'Validation errors in request',
+                    errors: errorMessages,
+                }
+            });
             return;
         };
 
         new CreateUser(this.userRepository)
             .execute(dto!)
-            .then(user => res.status(201).json(user))
+            .then(user => res.status(201).json({
+                success: true,
+                message: 'User created succesfully',
+                data: {user: user.toJSON()},
+            }))
             .catch(error => this.handleError(res, error));
     };
 

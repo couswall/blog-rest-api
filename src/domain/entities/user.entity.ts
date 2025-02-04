@@ -18,4 +18,12 @@ export class UserEntity {
 
         return new UserEntity(id, username, email, password);
     }
+
+    public toJSON(){
+        return{
+            id: this.id,
+            username: this.username,
+            emai: this.email,
+        }
+    }
 }
