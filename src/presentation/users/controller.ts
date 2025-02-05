@@ -3,6 +3,7 @@ import { CreateUserDto } from "@/domain/dtos";
 import { CustomError } from "@/domain/errors/custom.error";
 import { UserRepository } from "@/domain/repositories/user.repository";
 import { CreateUser, DeleteUser } from "@/domain/use-cases/user";
+import { JwtAdapter } from "@/config/jwt.adapter";
 
 export class UserController {
     constructor(
@@ -39,11 +40,18 @@ export class UserController {
 
         new CreateUser(this.userRepository)
             .execute(dto!)
-            .then(user => res.status(201).json({
-                success: true,
-                message: 'User created succesfully',
-                data: {user: user.toJSON()},
-            }))
+            .then(user => {
+                JwtAdapter.generateJWT({id: user.id, username: user.username})
+                    .then(token => res.status(201).json({
+                        success: true,
+                        message: 'User created succesfully',
+                        data: {
+                            user: user.toJSON(),
+                            token,
+                        },
+                    }))
+                    .catch(error => this.handleError(res, error))
+            })
             .catch(error => this.handleError(res, error));
     };
 
