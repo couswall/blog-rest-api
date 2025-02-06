@@ -12,6 +12,7 @@ export class UserRoutes {
         const userController = new UserController(userRepository);
 
         router.post('/signup', userController.createUser);
+        router.post('/login', userController.loginUser);
         router.delete('/deleteUser/:id', userController.deleteUser);
 
         return router;

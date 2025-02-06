@@ -16,7 +16,7 @@ export class CreateUser implements CreateUserUseCase{
         const newDto = new CreateUserDto(
             dto.username, 
             dto.email, 
-            BcryptAdapter.hash(dto.username)
+            BcryptAdapter.hash(dto.password)
         );
         return this.repository.create(newDto);
     }
