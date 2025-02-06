@@ -1,7 +1,7 @@
 import { UserEntity } from '@/domain/entities/user.entity';
 import { UserRepository } from '@/domain/repositories/user.repository';
 import { UserDatasource } from '@/domain/datasources/user.datasource';
-import { CreateUserDto } from '@/domain/dtos';
+import { CreateUserDto, LoginUserDto } from '@/domain/dtos';
 
 export class UserRepositoryImpl implements UserRepository{
     
@@ -15,6 +15,10 @@ export class UserRepositoryImpl implements UserRepository{
 
     findById(id: number): Promise<UserEntity> {
         return this.datasource.findById(id);
+    }
+
+    login(loginUserDto: LoginUserDto): Promise<UserEntity> {
+        return this.datasource.login(loginUserDto);
     }
 
     deleteById(id: number): Promise<UserEntity> {

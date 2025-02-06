@@ -1,6 +1,6 @@
 import { UserDatasource } from "@/domain/datasources/user.datasource";
 import { UserEntity } from "@/domain/entities/user.entity";
-import { CreateUserDto } from '@/domain/dtos';
+import { CreateUserDto, LoginUserDto } from '@/domain/dtos';
 import { prisma } from "@/data/postgres";
 import { CustomError } from "@/domain/errors/custom.error";
 import { ERROR_MESSAGES } from "@src/infrastructure/constants/user.constants";
@@ -29,6 +29,14 @@ export class UserDatasourceImpl implements UserDatasource {
         const user = await prisma.user.findUnique({where: {id}});
 
         if(!user) throw new CustomError(`User with ${id} not found`, 404);
+
+        return UserEntity.fromObject(user);
+    }
+
+    async login(loginUserDto: LoginUserDto): Promise<UserEntity> {
+        const user = await prisma.user.findUnique({where: {username: loginUserDto.username}});
+
+        if(!user) throw new CustomError(`Invalid credentials`, 404);
 
         return UserEntity.fromObject(user);
     }
