@@ -1,6 +1,6 @@
 import { UserDatasource } from "@/domain/datasources/user.datasource";
 import { UserEntity } from "@/domain/entities/user.entity";
-import { CreateUserDto, LoginUserDto } from '@/domain/dtos';
+import { CreateUserDto, LoginUserDto, UpdateUsernameDto } from '@/domain/dtos';
 import { prisma } from "@/data/postgres";
 import { CustomError } from "@/domain/errors/custom.error";
 import { ERROR_MESSAGES } from "@src/infrastructure/constants/user.constants";
@@ -39,6 +39,31 @@ export class UserDatasourceImpl implements UserDatasource {
         if(!user) throw new CustomError(`Invalid credentials`, 404);
 
         return UserEntity.fromObject(user);
+    }
+
+    async updateUsername(updateUsernameDto: UpdateUsernameDto): Promise<UserEntity> {
+        const currentUser = await this.findById(updateUsernameDto!.id);
+
+        if(!currentUser) throw new CustomError(`User with id ${updateUsernameDto!.id} not found`, 400);
+        if(currentUser.username === updateUsernameDto.username) return UserEntity.fromObject(currentUser);
+
+        const isUsernameTaken = await prisma.user.findFirst({
+            where: {
+                username: updateUsernameDto!.username,
+                id: { not: updateUsernameDto!.id }
+            }
+        });
+
+        if(isUsernameTaken) throw new CustomError(`Username ${updateUsernameDto!.username} already exists`);
+
+        const updatedUsername = await prisma.user.update({
+            where: {id: updateUsernameDto!.id},
+            data: {
+                username: updateUsernameDto.username,
+            }
+        });
+
+        return UserEntity.fromObject(updatedUsername);
     }
 
     async deleteById(id: number): Promise<UserEntity> {
