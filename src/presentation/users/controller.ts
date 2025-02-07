@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { CreateUserDto, LoginUserDto } from "@/domain/dtos";
+import { CreateUserDto, LoginUserDto, UpdateUsernameDto } from "@/domain/dtos";
 import { CustomError } from "@/domain/errors/custom.error";
 import { UserRepository } from "@/domain/repositories/user.repository";
-import { CreateUser, DeleteUser, LoginUser } from "@/domain/use-cases/user";
+import { CreateUser, DeleteUser, LoginUser, UpdateUsername } from "@/domain/use-cases/user";
 import { JwtAdapter } from "@/config/jwt.adapter";
 import { BcryptAdapter } from "@/config/bcrypt.adapter";
 
@@ -30,7 +30,7 @@ export class UserController {
         const [errorMessages, dto] = CreateUserDto.create(req.body);
         if (errorMessages) {
             res.status(400).json({
-                status: false,
+                success: false,
                 error: {
                     message: 'Validation errors in request',
                     errors: errorMessages,
@@ -60,7 +60,7 @@ export class UserController {
         const [errorMessages, dto] = LoginUserDto.create(req.body);
         if (errorMessages) {
             res.status(400).json({
-                status: false,
+                success: false,
                 error: {
                     message: 'Validation errors in request',
                     errors: errorMessages,
@@ -75,7 +75,7 @@ export class UserController {
                 const isValidPassword = BcryptAdapter.compare(dto!.password, user.password);
                 if (!isValidPassword) {
                     res.status(400).json({
-                        status: false,
+                        success: false,
                         error: {
                             message: 'Invalid credentials'
                         }
@@ -96,17 +96,54 @@ export class UserController {
             .catch(error => this.handleError(res, error));
     }
 
+    public updateUsername = (req: Request, res: Response) => {
+        const id = +req.params.id;
+        const [errorMessages, dto] = UpdateUsernameDto.create({id, ...req.body});
+        if (errorMessages) {
+            res.status(400).json({
+                success: false,
+                error: {
+                    message: 'Validation errors in request',
+                    errors: errorMessages,
+                } 
+            })
+            return;
+        };
+
+        new UpdateUsername(this.userRepository)
+            .execute(dto!)
+            .then(user => res.status(200).json({
+                success: true,
+                message: 'Username succesfully updated',
+                data: {
+                    user: user.toJSON()
+                },
+            }))
+            .catch(error => this.handleError(res, error))
+    };
+
     public deleteUser = (req: Request, res: Response) => {
         const id = +req.params.id;
         
         if(isNaN(id)){
-            res.status(400).json({error: 'ID argument is not a number'});
+            res.status(400).json({
+                success: false,
+                error: {
+                    message: 'ID argument is not a number'
+                }
+            });
             return;
         };
 
         new DeleteUser(this.userRepository)
             .execute(id)
-            .then(user => res.status(200).json(user))
+            .then(user => res.status(200).json({
+                success: true,
+                message: 'User has been successfully deleted.',
+                data: {
+                    user: user.toJSON()
+                }
+            }))
             .catch(error => this.handleError(res, error))
     }
 }

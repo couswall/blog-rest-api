@@ -13,6 +13,7 @@ export class UserRoutes {
 
         router.post('/signup', userController.createUser);
         router.post('/login', userController.loginUser);
+        router.put('/updateUsername/:id', userController.updateUsername);
         router.delete('/deleteUser/:id', userController.deleteUser);
 
         return router;
