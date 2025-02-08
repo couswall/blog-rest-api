@@ -2,6 +2,7 @@ import { Router } from "express";
 import { UserController } from "@presentation/users/controller";
 import { UserDatasourceImpl } from "@/infrastructure/datasources/user.datasource.impl";
 import { UserRepositoryImpl } from "@/infrastructure/repositories/user.repository.impl";
+import { validateJWT } from "../middlewares/validate-jwt";
 
 export class UserRoutes {
 
@@ -13,7 +14,7 @@ export class UserRoutes {
 
         router.post('/signup', userController.createUser);
         router.post('/login', userController.loginUser);
-        router.put('/updateUsername/:id', userController.updateUsername);
+        router.put('/updateUsername/:id', validateJWT, userController.updateUsername);
         router.delete('/deleteUser/:id', userController.deleteUser);
 
         return router;

@@ -1,4 +1,4 @@
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { envs } from '@config/envs';
 import { CustomError } from '@/domain/errors/custom.error';
 
