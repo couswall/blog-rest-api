@@ -2,6 +2,7 @@ export interface ICreateUser {
     username: string;
     email: string;
     password: string;
+    usernameUpdatedAt: Date | null;
 };
 
 export interface IErrorMsg {

@@ -3,7 +3,7 @@ import { UserEntity } from "@/domain/entities/user.entity";
 import { CreateUserDto, LoginUserDto, UpdateUsernameDto } from '@/domain/dtos';
 import { prisma } from "@/data/postgres";
 import { CustomError } from "@/domain/errors/custom.error";
-import { ERROR_MESSAGES } from "@src/infrastructure/constants/user.constants";
+import { COOLDOWN_DAYS, ERROR_MESSAGES } from "@src/infrastructure/constants/user.constants";
 
 export class UserDatasourceImpl implements UserDatasource {
     async create(createUserDto: CreateUserDto): Promise<UserEntity> {
@@ -42,24 +42,36 @@ export class UserDatasourceImpl implements UserDatasource {
     }
 
     async updateUsername(updateUsernameDto: UpdateUsernameDto): Promise<UserEntity> {
-        const currentUser = await this.findById(updateUsernameDto!.id);
+        const currentUser = await this.findById(updateUsernameDto.id);
 
-        if(!currentUser) throw new CustomError(`User with id ${updateUsernameDto!.id} not found`, 400);
+        if(!currentUser) throw new CustomError(`User with id ${updateUsernameDto.id} not found`, 400);
         if(currentUser.username === updateUsernameDto.username) return UserEntity.fromObject(currentUser);
+        
+        const currentDate = new Date().getTime();
+        
+        if (currentUser.usernameUpdatedAt) {
+            const lastUpdatedAt = currentUser.usernameUpdatedAt.getTime();
+            const daysSinceLastChange = Math.floor((currentDate - lastUpdatedAt) / (1000 * 60 * 60 * 24));
+            
+            if (daysSinceLastChange < COOLDOWN_DAYS) {
+                throw new CustomError(`You can only change your username once every ${COOLDOWN_DAYS} days`, 403);
+            }
+        }
 
         const isUsernameTaken = await prisma.user.findFirst({
             where: {
-                username: updateUsernameDto!.username,
-                id: { not: updateUsernameDto!.id }
+                username: updateUsernameDto.username,
+                id: { not: updateUsernameDto.id }
             }
         });
 
-        if(isUsernameTaken) throw new CustomError(`Username ${updateUsernameDto!.username} already exists`);
+        if(isUsernameTaken) throw new CustomError(`Username ${updateUsernameDto.username} already exists`);
 
         const updatedUsername = await prisma.user.update({
-            where: {id: updateUsernameDto!.id},
+            where: {id: updateUsernameDto.id},
             data: {
                 username: updateUsernameDto.username,
+                usernameUpdatedAt: new Date(),
             }
         });
 

@@ -6,3 +6,5 @@ export const ERROR_MESSAGES = {
         ALREADY_EXISTS: "Email already exists.",
     }
 };
+
+export const COOLDOWN_DAYS = 2;
