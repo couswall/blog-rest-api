@@ -1,4 +1,4 @@
-import { ERROR_MESSAGES, FIELDS, regExs } from "@/domain/dtos/user/constants";
+import { ERROR_MESSAGES, FIELDS, regExs } from "@/domain/constants/dto/user.constants";
 import { ICreateUser, IErrorMsg } from "@/domain/dtos/interfaces";
 
 export class CreateUserDto {

@@ -1,5 +1,5 @@
 import { IErrorMsg, IUpdatePassword } from "@src/domain/dtos/interfaces";
-import { ERROR_MESSAGES, FIELDS, regExs } from "@src/domain/dtos/user/constants";
+import { ERROR_MESSAGES, FIELDS, regExs } from "@/domain/constants/dto/user.constants";
 
 export class UpdateUsernameDto {
     constructor(

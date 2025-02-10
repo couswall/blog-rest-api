@@ -1,5 +1,5 @@
 import { IErrorMsg, ILoginUser } from "@src/domain/dtos/interfaces";
-import { ERROR_MESSAGES, FIELDS } from "./constants";
+import { ERROR_MESSAGES, FIELDS } from "@/domain/constants/dto/user.constants";
 
 export class LoginUserDto {
     constructor(
