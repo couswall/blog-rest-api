@@ -19,3 +19,10 @@ export interface IUpdatePassword{
     id: number;
     username: string;
 }
+
+export interface IUpdatePassword{
+    id: number;
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}

@@ -40,3 +40,30 @@ export const FIELDS = {
     EMAIL: 'email',
     PASSWORD: 'password',
 };
+
+export const UPDATE_PASSWORD = {
+    FIELDS: {
+        CURRENT_PASSWORD: 'currentPassword',
+        NEW_PASSWORD: 'newPassword',
+        CONFIRM_PASSWORD: 'confirmPassword',
+    },
+    ERROR_MESSAGES: {
+        CURRENT_PASSWORD: {
+            REQUIRED: 'Current password is required',
+        },
+        NEW_PASSWORD: {
+            REQUIRED: 'New password is required',
+            MIN_LENGTH: 'New password must be at least 6 characters long.',
+            UPPERCASE: 'New password must contain at least one uppercase letter.',
+            LOWERCASE: 'New password must contain at least one lowercase letter.',
+            NUMBER: 'New password must contain at least one number.',
+            SPECIAL_CHAR: 'New password must contain at least one special character.',
+        },
+        CONFIRM_PASSWORD: {
+            REQUIRED: 'Confirm password is required',
+        },
+        PASSWORDS_MATCH: 'Passwords do not match',
+    }
+};
+
+export const ID_ERROR_MSG = 'ID must be a number';
