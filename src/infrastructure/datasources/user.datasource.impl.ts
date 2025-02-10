@@ -1,9 +1,10 @@
 import { UserDatasource } from "@/domain/datasources/user.datasource";
 import { UserEntity } from "@/domain/entities/user.entity";
-import { CreateUserDto, LoginUserDto, UpdateUsernameDto } from '@/domain/dtos';
+import { CreateUserDto, LoginUserDto, UpdatePasswordDto, UpdateUsernameDto } from '@/domain/dtos';
 import { prisma } from "@/data/postgres";
 import { CustomError } from "@/domain/errors/custom.error";
 import { COOLDOWN_DAYS, ERROR_MESSAGES } from "@src/infrastructure/constants/user.constants";
+import { BcryptAdapter } from "@/config/bcrypt.adapter";
 
 export class UserDatasourceImpl implements UserDatasource {
     async create(createUserDto: CreateUserDto): Promise<UserEntity> {
@@ -78,6 +79,23 @@ export class UserDatasourceImpl implements UserDatasource {
         return UserEntity.fromObject(updatedUsername);
     }
 
+    async updatePassword(updatePasswordDto: UpdatePasswordDto): Promise<UserEntity> {
+        const user = await this.findById(updatePasswordDto.id);
+
+        const isValidPassword = BcryptAdapter.compare(updatePasswordDto.currentPassword, user.password);
+        if(!isValidPassword) throw new CustomError('Invalid current password', 400);
+
+        const isCurrentPassword = BcryptAdapter.compare(updatePasswordDto.newPassword, user.password);
+        if(isCurrentPassword) throw new CustomError('Please choose a different password from your current one', 400);
+
+        const updatedPasswordUser = await prisma.user.update({
+            where: {id: updatePasswordDto.id},
+            data: {password: BcryptAdapter.hash(updatePasswordDto.newPassword)}
+        });
+
+        return UserEntity.fromObject(updatedPasswordUser);
+    }
+    
     async deleteById(id: number): Promise<UserEntity> {
         const user = await this.findById(id);
 

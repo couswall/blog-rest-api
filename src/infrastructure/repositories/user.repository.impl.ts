@@ -1,7 +1,7 @@
 import { UserEntity } from '@/domain/entities/user.entity';
 import { UserRepository } from '@/domain/repositories/user.repository';
 import { UserDatasource } from '@/domain/datasources/user.datasource';
-import { CreateUserDto, LoginUserDto, UpdateUsernameDto } from '@/domain/dtos';
+import { CreateUserDto, LoginUserDto, UpdatePasswordDto, UpdateUsernameDto } from '@/domain/dtos';
 
 export class UserRepositoryImpl implements UserRepository{
     
@@ -23,6 +23,10 @@ export class UserRepositoryImpl implements UserRepository{
 
     updateUsername(updateUsernameDto: UpdateUsernameDto): Promise<UserEntity> {
         return this.datasource.updateUsername(updateUsernameDto);
+    }
+
+    updatePassword(updatePasswordDto: UpdatePasswordDto): Promise<UserEntity> {
+        return this.datasource.updatePassword(updatePasswordDto);
     }
 
     deleteById(id: number): Promise<UserEntity> {

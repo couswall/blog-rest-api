@@ -15,7 +15,8 @@ export class UserRoutes {
         router.post('/signup', userController.createUser);
         router.post('/login', userController.loginUser);
         router.put('/updateUsername/:id', validateJWT, userController.updateUsername);
-        router.delete('/deleteUser/:id', userController.deleteUser);
+        router.put('/updatePassword/:id', validateJWT, userController.updatePassword);
+        router.delete('/deleteUser/:id', validateJWT, userController.deleteUser);
 
         return router;
     }

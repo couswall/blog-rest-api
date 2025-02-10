@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { CreateUserDto, LoginUserDto, UpdateUsernameDto } from "@/domain/dtos";
+import { CreateUserDto, LoginUserDto, UpdatePasswordDto, UpdateUsernameDto } from "@/domain/dtos";
 import { CustomError } from "@/domain/errors/custom.error";
 import { UserRepository } from "@/domain/repositories/user.repository";
-import { CreateUser, DeleteUser, LoginUser, UpdateUsername } from "@/domain/use-cases/user";
+import { CreateUser, DeleteUser, LoginUser, UpdatePassword, UpdateUsername } from "@/domain/use-cases/user";
 import { JwtAdapter } from "@/config/jwt.adapter";
 import { BcryptAdapter } from "@/config/bcrypt.adapter";
 
@@ -114,13 +114,40 @@ export class UserController {
             .execute(dto!)
             .then(user => res.status(200).json({
                 success: true,
-                message: 'Username succesfully updated',
+                message: 'Username successfully updated',
                 data: {
                     user: user.toJSON()
                 },
             }))
             .catch(error => this.handleError(res, error))
     };
+
+    public updatePassword = (req: Request, res: Response) => {
+        const id = +req.params.id;
+        const [errorMessages, message, dto] = UpdatePasswordDto.create({id, ...req.body});
+        
+        if(errorMessages || message){
+            res.status(400).json({
+                success: false,
+                error: {
+                    message: message,
+                    errors: errorMessages,
+                },
+            });
+            return;
+        };
+
+        new UpdatePassword(this.userRepository)
+            .execute(dto!)
+            .then(user => res.status(200).json({
+                success: true,
+                message: 'Password successfully updated',
+                data: {
+                    user: user.toJSON(),
+                }
+            }))
+            .catch(error => this.handleError(res, error))
+    }
 
     public deleteUser = (req: Request, res: Response) => {
         const id = +req.params.id;
