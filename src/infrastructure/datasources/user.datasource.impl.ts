@@ -18,6 +18,19 @@ export class UserDatasourceImpl implements UserDatasource {
         });
 
         if(existingUser){
+            if (existingUser.deletedAt) {
+                const restoredUser = await prisma.user.update({
+                    where: {id: existingUser.id},
+                    data: {
+                        deletedAt: null,
+                        usernameUpdatedAt: null,
+                        username: createUserDto.username,
+                        email: createUserDto.email,
+                        password: createUserDto.password
+                    }
+                });
+                return UserEntity.fromObject(restoredUser);
+            }
             if(existingUser.username === createUserDto.username) throw new CustomError(ERROR_MESSAGES.USERNAME.ALREADY_EXISTS, 404);
             if(existingUser.email === createUserDto.email) throw new CustomError(ERROR_MESSAGES.EMAIL.ALREADY_EXISTS, 404);
         }
@@ -27,7 +40,9 @@ export class UserDatasourceImpl implements UserDatasource {
     }
 
     async findById(id: number): Promise<UserEntity> {
-        const user = await prisma.user.findUnique({where: {id}});
+        const user = await prisma.user.findFirst({
+            where: {id, deletedAt: null}
+        });
 
         if(!user) throw new CustomError(`User with ${id} not found`, 404);
 
@@ -101,7 +116,10 @@ export class UserDatasourceImpl implements UserDatasource {
 
         if(!user) throw new CustomError(`User with id ${id} not found`, 400);
 
-        const deletedUser = await prisma.user.delete({where: {id}});
+        const deletedUser = await prisma.user.update({
+            where: {id},
+            data: {deletedAt: new Date()}
+        });
 
         return UserEntity.fromObject(deletedUser);
     }

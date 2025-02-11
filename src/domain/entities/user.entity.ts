@@ -12,12 +12,20 @@ export class UserEntity {
         public email: string,
         public password: string,
         public usernameUpdatedAt: Date | null,
+        public deletedAt: Date | null,
     ){};
     
     public static fromObject(object: ICreateUserEntity){
-        const {username, password, email, id, usernameUpdatedAt} = object;
+        const {username, password, email, id, usernameUpdatedAt, deletedAt} = object;
 
-        return new UserEntity(id, username, email, password, usernameUpdatedAt);
+        return new UserEntity(
+            id, 
+            username, 
+            email, 
+            password, 
+            usernameUpdatedAt,
+            deletedAt,
+        );
     }
 
     public toJSON(){

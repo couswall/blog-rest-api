@@ -98,12 +98,12 @@ export class UserController {
 
     public updateUsername = (req: Request, res: Response) => {
         const id = +req.params.id;
-        const [errorMessages, dto] = UpdateUsernameDto.create({id, ...req.body});
-        if (errorMessages) {
+        const [errorMessages,message ,dto] = UpdateUsernameDto.create({id, ...req.body});
+        if (errorMessages || message) {
             res.status(400).json({
                 success: false,
                 error: {
-                    message: 'Validation errors in request',
+                    message: message,
                     errors: errorMessages,
                 } 
             })

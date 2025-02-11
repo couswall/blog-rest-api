@@ -3,6 +3,7 @@ export interface ICreateUser {
     email: string;
     password: string;
     usernameUpdatedAt: Date | null;
+    deletedAt: Date | null;
 };
 
 export interface IErrorMsg {
