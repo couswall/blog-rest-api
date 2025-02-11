@@ -1,5 +1,5 @@
 import { IErrorMsg, IUpdatePassword } from "@src/domain/dtos/interfaces";
-import { ERROR_MESSAGES, FIELDS, ID_ERROR, regExs } from "@/domain/constants/dto/user.constants";
+import { ERROR_MESSAGES, FIELDS, ID_ERROR_MSG, regExs } from "@/domain/constants/dto/user.constants";
 
 export class UpdateUsernameDto {
     constructor(
@@ -8,13 +8,9 @@ export class UpdateUsernameDto {
     ){}
     
     static validate(props: IUpdatePassword): IErrorMsg[]{
-        const {id, username} = props;
+        const {username} = props;
         let errors: IErrorMsg[] = [];
 
-        if(!id || isNaN(id)) {
-            errors.push({field: ID_ERROR.FIELD, message: ID_ERROR.MESSAGE});
-            return errors;
-        };
         if (!username){
             errors.push({field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.REQUIRED});
             return errors;
@@ -27,11 +23,14 @@ export class UpdateUsernameDto {
         return errors;
     };
 
-    static create(props: IUpdatePassword): [IErrorMsg[]?, UpdateUsernameDto?]{
+    static create(props: IUpdatePassword): [IErrorMsg[]?, string?, UpdateUsernameDto?]{
         const {id, username} = props;
-        const errors: IErrorMsg[] = UpdateUsernameDto.validate(props);
 
-        if(errors.length > 0) return [errors, undefined];
-        return [undefined, new UpdateUsernameDto(id, username)];
+        if(!id || isNaN(id)) return [undefined, ID_ERROR_MSG, undefined];
+        
+        const errors: IErrorMsg[] = UpdateUsernameDto.validate(props);
+        if(errors.length > 0) return [errors, 'Validation errors in request', undefined];
+        
+        return [undefined, undefined, new UpdateUsernameDto(id, username)];
     }
 }
