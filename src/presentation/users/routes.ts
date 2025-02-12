@@ -2,7 +2,7 @@ import { Router } from "express";
 import { UserController } from "@presentation/users/controller";
 import { UserDatasourceImpl } from "@/infrastructure/datasources/user.datasource.impl";
 import { UserRepositoryImpl } from "@/infrastructure/repositories/user.repository.impl";
-import { validateJWT } from "../middlewares/validate-jwt";
+import { validateJWT } from "@presentation/middlewares/validate-jwt";
 
 export class UserRoutes {
 

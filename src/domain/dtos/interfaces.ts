@@ -1,9 +1,14 @@
+import { BlogEntity, CommentEntity, LikeEntity } from "@/domain/entities";
+
 export interface ICreateUser {
     username: string;
     email: string;
     password: string;
     usernameUpdatedAt: Date | null;
     deletedAt: Date | null;
+    blogs: BlogEntity[];
+    comments: CommentEntity[];
+    likes: LikeEntity[];
 };
 
 export interface IErrorMsg {

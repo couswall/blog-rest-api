@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { BlogController } from "@presentation/blogs/controller";
+import { validateJWT } from "@presentation/middlewares/validate-jwt";
 
 export class BlogRoutes {
 
@@ -8,11 +9,11 @@ export class BlogRoutes {
 
         const blogContoller = new BlogController();
 
-        router.get('/', blogContoller.getBlogs);
-        router.get('/:id', blogContoller.getBlogById);
-        router.post('/', blogContoller.createBlog);
-        router.put('/:id', blogContoller.updateBlog);
-        router.delete('/:id', blogContoller.deleteBlog);
+        router.get('/', validateJWT, blogContoller.getBlogs);
+        router.get('/:id', validateJWT, blogContoller.getBlogById);
+        router.post('/', validateJWT, blogContoller.createBlog);
+        router.put('/:id', validateJWT, blogContoller.updateBlog);
+        router.put('/deleteBlog/:id', validateJWT, blogContoller.deleteBlog);
 
         return router;
     }
