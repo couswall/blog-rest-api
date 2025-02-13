@@ -13,32 +13,30 @@ export class UpdatePasswordDto {
         const {currentPassword,newPassword,confirmPassword} = props;
         let errors: IErrorMsg[] = [];
 
-        if (!currentPassword) {
-            errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CURRENT_PASSWORD.REQUIRED});
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            if(!currentPassword) errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CURRENT_PASSWORD.REQUIRED});
+            if(!newPassword) errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.REQUIRED});
+            if(!confirmPassword) errors.push({field: UPDATE_PASSWORD.FIELDS.CONFIRM_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CONFIRM_PASSWORD.REQUIRED});
             return errors;
         }
-        if(currentPassword.trim().length === 0) errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CURRENT_PASSWORD.REQUIRED});
 
-        if (!newPassword) {
-            errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.REQUIRED});
-            return errors;
-        };
+        if(typeof currentPassword !== 'string') errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CURRENT_PASSWORD.STRING});
+        if(typeof newPassword !== 'string') errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.STRING});
+        if(typeof confirmPassword !== 'string') errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CONFIRM_PASSWORD.STRING});
 
-        if(newPassword.length < 6) 
-            errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.MIN_LENGTH});
-        if(!regExs.password.uppercase.test(newPassword))
-            errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.UPPERCASE});
-        if(!regExs.password.lowercase.test(newPassword))
-            errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.LOWERCASE});
-        if(!regExs.password.number.test(newPassword))
-            errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.NUMBER});
-        if(!regExs.password.specialCharacter.test(newPassword))
-            errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.SPECIAL_CHAR});
+        if(errors.length > 0) return errors;
 
-        if(!confirmPassword){
-            errors.push({field: UPDATE_PASSWORD.FIELDS.CONFIRM_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CONFIRM_PASSWORD.REQUIRED});
-            return errors;
-        };
+        const passwordChecks = [
+            { condition: newPassword.length < 6, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.MIN_LENGTH },
+            { condition: !regExs.password.uppercase.test(newPassword), message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.UPPERCASE },
+            { condition: !regExs.password.lowercase.test(newPassword), message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.LOWERCASE },
+            { condition: !regExs.password.number.test(newPassword), message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.NUMBER },
+            { condition: !regExs.password.specialCharacter.test(newPassword), message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.SPECIAL_CHAR }
+        ];
+        
+        passwordChecks.forEach(({condition, message}) => {
+            if(condition) errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message});
+        });
 
         if(newPassword !== confirmPassword)
             errors.push({field: UPDATE_PASSWORD.FIELDS.CONFIRM_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.PASSWORDS_MATCH});

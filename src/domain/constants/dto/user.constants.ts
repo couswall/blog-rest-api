@@ -54,6 +54,7 @@ export const UPDATE_PASSWORD = {
     ERROR_MESSAGES: {
         CURRENT_PASSWORD: {
             REQUIRED: 'Current password is required',
+            STRING: 'Current password must be a string',
         },
         NEW_PASSWORD: {
             REQUIRED: 'New password is required',
@@ -62,9 +63,11 @@ export const UPDATE_PASSWORD = {
             LOWERCASE: 'New password must contain at least one lowercase letter.',
             NUMBER: 'New password must contain at least one number.',
             SPECIAL_CHAR: 'New password must contain at least one special character.',
+            STRING: 'New password must be a string',
         },
         CONFIRM_PASSWORD: {
             REQUIRED: 'Confirm password is required',
+            STRING: 'Confirm password must be a string',
         },
         PASSWORDS_MATCH: 'Passwords do not match',
     }
