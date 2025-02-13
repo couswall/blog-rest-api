@@ -12,20 +12,38 @@ export class CreateUserDto {
         const {username, email, password} = props;
         let errors: IErrorMsg[] = [];
 
-        if (!username || username.trim().length === 0) errors.push({field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.REQUIRED});
+        if (!username || !email || !password) {
+            if(!username) errors.push({field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.REQUIRED});
+            if(!email) errors.push({field: FIELDS.EMAIL, message: ERROR_MESSAGES.EMAIL.REQUIRED});
+            if (!password) errors.push({field: FIELDS.PASSWORD, message: ERROR_MESSAGES.PASSWORD.REQUIRED});
+            return errors;
+        }
+
+        if(typeof username !== 'string') errors.push({field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.STRING});
+        if(typeof email !== 'string') errors.push({field: FIELDS.EMAIL, message: ERROR_MESSAGES.EMAIL.STRING});
+        if(typeof password !== 'string') errors.push({field: FIELDS.PASSWORD, message: ERROR_MESSAGES.PASSWORD.STRING});
+
+        if(errors.length > 0) return errors;
+
+        if (username.trim().length === 0) errors.push({field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.BLANK_SPACES});
         if(username.length > 15) errors.push({field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.MAX_LENGTH});
         if(regExs.username.noSpaces.test(username)) errors.push({field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.SPACES});
         if(!regExs.username.validFormat.test(username)) errors.push({field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.INVALID_FORMAT})
 
-        if (!email || email.trim().length === 0) errors.push({field: FIELDS.EMAIL, message: ERROR_MESSAGES.EMAIL.REQUIRED});
+        if (email.trim().length === 0) errors.push({field: FIELDS.EMAIL, message: ERROR_MESSAGES.EMAIL.REQUIRED});
         if(!regExs.email.validFormat.test(email)) errors.push({field: FIELDS.EMAIL, message: ERROR_MESSAGES.EMAIL.INVALID_FORMAT});
         
-        if (!password) errors.push({field: FIELDS.PASSWORD, message: ERROR_MESSAGES.PASSWORD.REQUIRED});
-        if(password.length < 6) errors.push({field: FIELDS.PASSWORD, message: ERROR_MESSAGES.PASSWORD.MIN_LENGTH});
-        if(!regExs.password.uppercase.test(password)) errors.push({field: FIELDS.PASSWORD, message: ERROR_MESSAGES.PASSWORD.UPPERCASE});
-        if(!regExs.password.lowercase.test(password)) errors.push({field: FIELDS.PASSWORD, message: ERROR_MESSAGES.PASSWORD.LOWERCASE});
-        if(!regExs.password.number.test(password)) errors.push({field: FIELDS.PASSWORD, message: ERROR_MESSAGES.PASSWORD.NUMBER});
-        if(!regExs.password.specialCharacter.test(password)) errors.push({field: FIELDS.PASSWORD, message: ERROR_MESSAGES.PASSWORD.SPECIAL_CHAR});
+        const passwordChecks = [
+            { condition: password.length < 6, message: ERROR_MESSAGES.PASSWORD.MIN_LENGTH },
+            { condition: !regExs.password.uppercase.test(password), message: ERROR_MESSAGES.PASSWORD.UPPERCASE },
+            { condition: !regExs.password.lowercase.test(password), message: ERROR_MESSAGES.PASSWORD.LOWERCASE },
+            { condition: !regExs.password.number.test(password), message: ERROR_MESSAGES.PASSWORD.NUMBER },
+            { condition: !regExs.password.specialCharacter.test(password), message: ERROR_MESSAGES.PASSWORD.SPECIAL_CHAR }
+        ];
+
+        passwordChecks.forEach(({condition, message}) => {
+            if(condition) errors.push({field: FIELDS.PASSWORD, message});
+        });
 
         return errors;
     }

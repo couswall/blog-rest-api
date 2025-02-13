@@ -20,10 +20,13 @@ export const ERROR_MESSAGES = {
         MAX_LENGTH: 'Username must be at most 15 characters long.',
         SPACES: 'Username cannot contain spaces.',
         INVALID_FORMAT: 'Username can only contain letters, numbers, and underscores.',
+        STRING: 'Username must be a string',
+        BLANK_SPACES: 'Username cannot contain only blank spaces'
     },
     EMAIL: {
         REQUIRED: 'Email is required.',
         INVALID_FORMAT: 'Invalid email format.',
+        STRING: 'Email must be a string',
     },
     PASSWORD: {
         REQUIRED: 'Password is required.',
@@ -32,6 +35,7 @@ export const ERROR_MESSAGES = {
         LOWERCASE: 'Password must contain at least one lowercase letter.',
         NUMBER: 'Password must contain at least one number.',
         SPECIAL_CHAR: 'Password must contain at least one special character.',
+        STRING: 'Password must be a string',
     }
 };
 
