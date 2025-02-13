@@ -36,6 +36,6 @@ export class CreateUserDto {
 
         if(errors.length > 0) return [errors, undefined];
 
-        return [undefined, new CreateUserDto(username, email, password)];
+        return [undefined, new CreateUserDto(username, email.toLowerCase(), password)];
     }
 }

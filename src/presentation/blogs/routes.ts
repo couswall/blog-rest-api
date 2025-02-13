@@ -11,7 +11,7 @@ export class BlogRoutes {
 
         router.get('/', validateJWT, blogContoller.getBlogs);
         router.get('/:id', validateJWT, blogContoller.getBlogById);
-        router.post('/', validateJWT, blogContoller.createBlog);
+        router.post('/:authorId', validateJWT, blogContoller.createBlog);
         router.put('/:id', validateJWT, blogContoller.updateBlog);
         router.put('/deleteBlog/:id', validateJWT, blogContoller.deleteBlog);
 

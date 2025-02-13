@@ -1,3 +1,4 @@
+import { CreateBlogDto } from "@/domain/dtos/blogs";
 import { Request, Response } from "express";
 
 
@@ -16,6 +17,19 @@ export class BlogController {
     };
 
     public createBlog = (req: Request, res: Response) => {
+        const authorId = +req.params.authorId;
+        const [errorMessages, message, dto] = CreateBlogDto.create({authorId, ...req.body});
+        if (errorMessages || message) {
+            res.status(400).json({
+                success: false,
+                error: {
+                    message: message,
+                    errors: errorMessages,
+                }
+            });
+            return;
+        };
+        
         res.json({message: 'Create blog'});
         return;
     };
