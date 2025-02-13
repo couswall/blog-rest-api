@@ -51,7 +51,7 @@ export class UserDatasourceImpl implements UserDatasource {
 
     async login(loginUserDto: LoginUserDto): Promise<UserEntity> {
         const user = await prisma.user.findUnique({
-            where: {username: loginUserDto.username, deletedAt: null}
+            where: {username: loginUserDto.username, deletedAt: null},
         });
 
         if(!user) throw new CustomError(`Invalid credentials`, 404);

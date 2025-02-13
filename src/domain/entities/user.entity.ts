@@ -29,9 +29,9 @@ export class UserEntity {
             password, 
             usernameUpdatedAt,
             deletedAt,
-            blogs,
-            comments,
-            likes,
+            blogs || [],
+            comments || [],
+            likes || [],
         );
     }
 
@@ -40,7 +40,6 @@ export class UserEntity {
             id: this.id,
             username: this.username,
             email: this.email,
-            blogs: this.blogs,
         }
     }
 }

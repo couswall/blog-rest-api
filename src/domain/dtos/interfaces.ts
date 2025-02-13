@@ -6,9 +6,9 @@ export interface ICreateUser {
     password: string;
     usernameUpdatedAt: Date | null;
     deletedAt: Date | null;
-    blogs: BlogEntity[];
-    comments: CommentEntity[];
-    likes: LikeEntity[];
+    blogs?: BlogEntity[];
+    comments?: CommentEntity[];
+    likes?: LikeEntity[];
 };
 
 export interface IErrorMsg {
