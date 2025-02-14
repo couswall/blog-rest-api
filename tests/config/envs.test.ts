@@ -1,5 +1,4 @@
-// import {envs} from '@src/config/envs';
-import {envs} from '../../src/config/envs';
+import {envs} from '@config/envs';
 
 describe('envs.test ', () => { 
 
