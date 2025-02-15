@@ -6,9 +6,10 @@
     "dev": "tsnd -r tsconfig-paths/register --respawn --clear src/app.ts",
     "build": "rimraf ./dist && tsc",
     "start": "npm run build && node dist/app.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "prisma:migrate:test": "dotenv -e .env.test -- npx prisma migrate deploy",
+    "test": "npm run prisma:migrate:test && jest",
+    "test:watch": "npm run prisma:migrate:test && jest --watch",
+    "test:coverage": "npm run prisma:migrate:test && jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,8 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.10",
+    "@types/supertest": "^6.0.2",
+    "dotenv-cli": "^8.0.0",
     "jest": "^29.7.0",
     "prisma": "^6.3.0",
     "rimraf": "^6.0.1",
