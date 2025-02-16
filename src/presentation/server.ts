@@ -1,4 +1,5 @@
 import express, { Router } from 'express';
+import { Server as HttpServer } from 'http';
 
 interface Options {
     port: number;
@@ -7,8 +8,9 @@ interface Options {
 }
 
 export class Server {
-    private readonly app = express();
+    public readonly app = express();
     private readonly port: number;
+    private serverListener?: HttpServer;
     private readonly publicPath: string;
     private readonly routes: Router;
 
@@ -29,8 +31,12 @@ export class Server {
 
         this.app.use(this.routes);
 
-        this.app.listen(this.port, () =>{
+        this.serverListener = this.app.listen(this.port, () =>{
             console.log(`Server running on port ${this.port}`)
         });
+    };
+
+    public close(){
+        this.serverListener?.close();
     }
 }
