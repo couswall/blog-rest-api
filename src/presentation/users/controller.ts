@@ -85,7 +85,7 @@ export class UserController {
                 JwtAdapter.generateJWT({id: user.id, username: user.username})
                     .then(token => res.status(200).json({
                         success: true,
-                        message: 'Login succesfully',
+                        message: 'Login successful',
                         data: {
                             user: user.toJSON(),
                             token,
