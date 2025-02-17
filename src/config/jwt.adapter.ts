@@ -9,9 +9,9 @@ interface IJwtPayload {
 
 export class JwtAdapter {
     
-    static async generateJWT(payload: IJwtPayload): Promise<string>{
+    static async generateJWT(payload: IJwtPayload, expiresIn: number = 7200): Promise<string>{
         return new Promise((resolve, reject) => {            
-            jwt.sign(payload, envs.JWT_SECRET_SEED, {expiresIn: '2h'}, (err, token) => {
+            jwt.sign(payload, envs.JWT_SECRET_SEED, {expiresIn}, (err, token) => {
                 if(err || !token) return reject(new CustomError('Cannot generate token', 500));
                 resolve(token);
             });

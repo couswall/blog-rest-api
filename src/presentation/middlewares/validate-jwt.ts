@@ -16,7 +16,7 @@ export const validateJWT = (req: Request, res: Response, next: NextFunction) => 
 
     JwtAdapter.verifyJWT(token)
         .then(payload => {
-            console.log(payload);
+            // console.log(payload);
             next();
         })
         .catch(() => res.status(401).json({

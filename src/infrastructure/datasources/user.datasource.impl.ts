@@ -44,7 +44,7 @@ export class UserDatasourceImpl implements UserDatasource {
             where: {id, deletedAt: null}
         });
 
-        if(!user) throw new CustomError(`User with ${id} not found`, 404);
+        if(!user) throw new CustomError(`User with id ${id} not found`, 404);
 
         return UserEntity.fromObject(user);
     }
@@ -62,7 +62,6 @@ export class UserDatasourceImpl implements UserDatasource {
     async updateUsername(updateUsernameDto: UpdateUsernameDto): Promise<UserEntity> {
         const currentUser = await this.findById(updateUsernameDto.id);
 
-        if(!currentUser) throw new CustomError(`User with id ${updateUsernameDto.id} not found`, 400);
         if(currentUser.username === updateUsernameDto.username) return UserEntity.fromObject(currentUser);
         
         const currentDate = new Date().getTime();

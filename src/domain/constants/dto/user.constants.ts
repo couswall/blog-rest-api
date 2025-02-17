@@ -17,7 +17,7 @@ export const regExs = {
 export const ERROR_MESSAGES = {
     USERNAME: {
         REQUIRED: 'Username is required.',
-        MAX_LENGTH: 'Username must be at most 15 characters long.',
+        MAX_LENGTH: 'Username must be at most 30 characters long.',
         SPACES: 'Username cannot contain spaces.',
         INVALID_FORMAT: 'Username can only contain letters, numbers, and underscores.',
         STRING: 'Username must be a string',

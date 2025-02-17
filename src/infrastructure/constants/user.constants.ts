@@ -7,4 +7,4 @@ export const ERROR_MESSAGES = {
     }
 };
 
-export const COOLDOWN_DAYS = 2;
+export const COOLDOWN_DAYS = 30;

@@ -4,6 +4,8 @@ import { ERROR_VALIDATION_MSG } from '@/domain/constants/dto/blog.constants';
 import { testServer } from 'tests/test-server';
 import { ERROR_MESSAGES, FIELDS } from '@/domain/constants/dto/user.constants';
 import { BcryptAdapter } from '@/config/bcrypt.adapter';
+import { JwtAdapter } from '@/config/jwt.adapter';
+import { COOLDOWN_DAYS } from '@/infrastructure/constants/user.constants';
 
 const testUser = {username: 'TestingUser', email: 'test@google.com'};
 const testUserCredentials = {...testUser, password: 'Testing89#!'};
@@ -115,10 +117,10 @@ describe('users routes testing', () => {
                 );
             });
             
-            test('/signup endpoint should return a 400 error if username contains more than 15 characters', async () => { 
+            test('/signup endpoint should return a 400 error if username contains more than 30 characters', async () => { 
                 const {body} = await request(testServer.app)
                     .post('/api/users/signup')
-                    .send({...testUserCredentials, username: 'Usernamewithmorethan15charactesALongUSername'})
+                    .send({...testUserCredentials, username: 'Usernamewithmorethan15charactesALongUSernamedfddffddfd'})
                     .expect(400)
         
                 expect(body.success).toBeFalsy();
@@ -403,7 +405,230 @@ describe('users routes testing', () => {
         });
 
     });
-    // describe('/updateUsername/:id Endpoint', () => {  })
+    describe('/updateUsername/:id Endpoint', () => { 
+        test('should update username and return user data', async () => { 
+            const user = await prisma.user.create({data: testUserCredentials});
+            const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+            const updatedUsername = 'updated_user';
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/updateUsername/${user.id}`)
+                .set('token', `${userToken}`)
+                .send({username: updatedUsername})
+                .expect(200)
+
+            expect(body).toEqual({
+                success: true,
+                message: 'Username successfully updated',
+                data: {
+                    user: {
+                        id: user.id,
+                        username: updatedUsername,
+                        email: testUserCredentials.email
+                    }
+                }
+            })
+        });
+        test('should expect a 200 status code if updated username is the current username', async () => { 
+            const user = await prisma.user.create({data: testUserCredentials});
+            const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/updateUsername/${user.id}`)
+                .set('token', `${userToken}`)
+                .send({username: testUserCredentials.username})
+                .expect(200)
+
+            expect(body.success).toBeTruthy()
+        });
+        test('should throw a 404 error if user does not exist', async () => { 
+            const id = 2;
+            const user = await prisma.user.create({data: testUserCredentials});
+            const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+            const updatedUsername = 'updated_user';
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/updateUsername/${id}`)
+                .set('token', `${userToken}`)
+                .send({username: updatedUsername})
+                .expect(404)
+            
+            expect(body).toEqual({
+                success: false,
+                error: {message: `User with id ${id} not found`}
+            });
+        });
+        test('should throw a 401 error if token is not sent', async () => { 
+            const updatedUsername = 'updated_user';
+            
+            const {body} = await request(testServer.app)
+                .put(`/api/users/updateUsername/20`)
+                .send({username: updatedUsername})
+                .expect(401)
+            
+            expect(body).toEqual({
+                success: false,
+                error: {message: expect.any(String)}
+            });
+        });
+        test('should throw a 401 error if token is invalid', async () => { 
+            const updatedUsername = 'updated_user';
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/updateUsername/20`)
+                .set('token', 'abc')
+                .send({username: updatedUsername})
+                .expect(401)
+            
+            expect(body).toEqual({
+                success: false,
+                error: {message: expect.any(String)}
+            });
+        });
+        test('should throw a 401 error if token has expired', async () => { 
+            const user = await prisma.user.create({data: testUserCredentials});
+            const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username}, -1);
+            const updatedUsername = 'updated_user';
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/updateUsername/${user.id}`)
+                .set('token', `${userToken}`)
+                .send({username: updatedUsername})
+                .expect(401)
+            
+            expect(body).toEqual({
+                success: false,
+                error: {message: expect.any(String)}
+            });
+        });
+        test('should throw a 400 error if username already exists with other id', async () => { 
+            await prisma.user.create({data: testUserCredentials});
+            const user2 = await prisma.user.create({
+                data: {username: 'testing_user', email: 'testing@gmail.com', password: testUserCredentials.password}
+            });
+            const userToken = await JwtAdapter.generateJWT({id: user2.id, username: user2.username});
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/updateUsername/${user2.id}`)
+                .set('token', `${userToken}`)
+                .send({username: testUserCredentials.username})
+                .expect(400)
+            
+            expect(body).toEqual({
+                success: false,
+                error: {message: `Username ${testUserCredentials.username} already exists`}
+            });
+        });
+        test('should throw a 403 error if username change during cooldown period', async () => { 
+            const user = await prisma.user.create({data: testUserCredentials});
+            await prisma.user.update({
+                where: {id: user.id},
+                data: {usernameUpdatedAt: new Date()}
+            });
+            const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/updateUsername/${user.id}`)
+                .set('token', `${userToken}`)
+                .send({username: 'updatedUsername'})
+                .expect(403)
+
+            expect(body.success).toBeFalsy();
+            expect(body.error).toEqual({message: `You can only change your username once every ${COOLDOWN_DAYS} days`});
+        });
+        describe('Username validation', () => { 
+            test('should throw a 400 error if username is not a string', async () => { 
+                const user = await prisma.user.create({data: testUserCredentials});
+                const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+                
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updateUsername/${user.id}`)
+                    .set('token', `${userToken}`)
+                    .send({username: 12332})
+                    .expect(400)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG)
+                expect(body.error.errors).toEqual(
+                    expect.arrayContaining([
+                        { field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.STRING }
+                    ])
+                );
+            });
+            test('should throw a 400 error if username length is more than 30 characters', async () => { 
+                const user = await prisma.user.create({data: testUserCredentials});
+                const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+                
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updateUsername/${user.id}`)
+                    .set('token', `${userToken}`)
+                    .send({username: 'sddadascdcjojoejewijorijoejeoewjorererwrowjoewow432423'})
+                    .expect(400)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG)
+                expect(body.error.errors).toEqual(
+                    expect.arrayContaining([
+                        { field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.MAX_LENGTH }
+                    ])
+                );
+            });
+            test('should throw a 400 error if username contains only blank spaces', async () => { 
+                const user = await prisma.user.create({data: testUserCredentials});
+                const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+                
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updateUsername/${user.id}`)
+                    .set('token', `${userToken}`)
+                    .send({username: '       '})
+                    .expect(400)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG)
+                expect(body.error.errors).toEqual(
+                    expect.arrayContaining([
+                        { field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.BLANK_SPACES }
+                    ])
+                );
+            });
+            test('should throw a 400 error if username contains any space', async () => { 
+                const user = await prisma.user.create({data: testUserCredentials});
+                const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+                
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updateUsername/${user.id}`)
+                    .set('token', `${userToken}`)
+                    .send({username: 'user name'})
+                    .expect(400)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG)
+                expect(body.error.errors).toEqual(
+                    expect.arrayContaining([
+                        { field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.SPACES }
+                    ])
+                );
+            });
+            test('should throw a 400 error if username format is invalid', async () => { 
+                const user = await prisma.user.create({data: testUserCredentials});
+                const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+                
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updateUsername/${user.id}`)
+                    .set('token', `${userToken}`)
+                    .send({username: 'username!{}'})
+                    .expect(400)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG)
+                expect(body.error.errors).toEqual(
+                    expect.arrayContaining([
+                        { field: FIELDS.USERNAME, message: ERROR_MESSAGES.USERNAME.INVALID_FORMAT }
+                    ])
+                );
+            });
+        });
+    });
     // describe('/updatePassword/:id', () => {  })
     // describe('/deleteUser/:id', () => {  })
 });
