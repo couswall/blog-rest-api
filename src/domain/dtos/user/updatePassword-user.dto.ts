@@ -21,8 +21,8 @@ export class UpdatePasswordDto {
         }
 
         if(typeof currentPassword !== 'string') errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CURRENT_PASSWORD.STRING});
-        if(typeof newPassword !== 'string') errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.STRING});
-        if(typeof confirmPassword !== 'string') errors.push({field: UPDATE_PASSWORD.FIELDS.CURRENT_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CONFIRM_PASSWORD.STRING});
+        if(typeof newPassword !== 'string') errors.push({field: UPDATE_PASSWORD.FIELDS.NEW_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.NEW_PASSWORD.STRING});
+        if(typeof confirmPassword !== 'string') errors.push({field: UPDATE_PASSWORD.FIELDS.CONFIRM_PASSWORD, message: UPDATE_PASSWORD.ERROR_MESSAGES.CONFIRM_PASSWORD.STRING});
 
         if(errors.length > 0) return errors;
 
