@@ -463,49 +463,6 @@ describe('users routes testing', () => {
                 error: {message: `User with id ${id} not found`}
             });
         });
-        test('should throw a 401 error if token is not sent', async () => { 
-            const updatedUsername = 'updated_user';
-            
-            const {body} = await request(testServer.app)
-                .put(`/api/users/updateUsername/20`)
-                .send({username: updatedUsername})
-                .expect(401)
-            
-            expect(body).toEqual({
-                success: false,
-                error: {message: expect.any(String)}
-            });
-        });
-        test('should throw a 401 error if token is invalid', async () => { 
-            const updatedUsername = 'updated_user';
-
-            const {body} = await request(testServer.app)
-                .put(`/api/users/updateUsername/20`)
-                .set('token', 'abc')
-                .send({username: updatedUsername})
-                .expect(401)
-            
-            expect(body).toEqual({
-                success: false,
-                error: {message: expect.any(String)}
-            });
-        });
-        test('should throw a 401 error if token has expired', async () => { 
-            const user = await prisma.user.create({data: testUserCredentials});
-            const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username}, -1);
-            const updatedUsername = 'updated_user';
-
-            const {body} = await request(testServer.app)
-                .put(`/api/users/updateUsername/${user.id}`)
-                .set('token', `${userToken}`)
-                .send({username: updatedUsername})
-                .expect(401)
-            
-            expect(body).toEqual({
-                success: false,
-                error: {message: expect.any(String)}
-            });
-        });
         test('should throw a 400 error if username already exists with other id', async () => { 
             await prisma.user.create({data: testUserCredentials});
             const user2 = await prisma.user.create({
@@ -540,6 +497,51 @@ describe('users routes testing', () => {
 
             expect(body.success).toBeFalsy();
             expect(body.error).toEqual({message: `You can only change your username once every ${COOLDOWN_DAYS} days`});
+        });
+        describe('Token validation', () => {  
+            test('should throw a 401 error if token is not sent', async () => { 
+                const updatedUsername = 'updated_user';
+                
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updateUsername/20`)
+                    .send({username: updatedUsername})
+                    .expect(401)
+                
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: expect.any(String)}
+                });
+            });
+            test('should throw a 401 error if token is invalid', async () => { 
+                const updatedUsername = 'updated_user';
+    
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updateUsername/20`)
+                    .set('token', 'abc')
+                    .send({username: updatedUsername})
+                    .expect(401)
+                
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: expect.any(String)}
+                });
+            });
+            test('should throw a 401 error if token has expired', async () => { 
+                const user = await prisma.user.create({data: testUserCredentials});
+                const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username}, -1);
+                const updatedUsername = 'updated_user';
+    
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updateUsername/${user.id}`)
+                    .set('token', `${userToken}`)
+                    .send({username: updatedUsername})
+                    .expect(401)
+                
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: expect.any(String)}
+                });
+            });
         });
         describe('Username validation', () => { 
             test('should throw a 400 error if username is not a string', async () => { 
@@ -712,7 +714,37 @@ describe('users routes testing', () => {
             expect(body.success).toBeFalsy();
             expect(body.error.message).toBe('Please choose a different password from your current one');
         });
-
+        describe('Token validation', () => {  
+            test('should throw a 401 error if token is not sent', async () => {             
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updatePassword/20`)
+                    .expect(401)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe('No token sent');
+            });
+            test('should throw a 401 error if token is invalid', async () => {             
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updatePassword/20`)
+                    .set('token', 'abcdfsfsfsfsgjdsjskjgsjgsk')
+                    .expect(401)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe('Invalid or expired token');
+            });
+            test('should throw a 401 error if token has expired', async () => { 
+                const id = 15;
+                const userToken = await JwtAdapter.generateJWT({id, username: testUserCredentials.username}, -1);
+    
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/updatePassword/${id}`)
+                    .set('token', `${userToken}`)
+                    .expect(401)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe('Invalid or expired token');
+            });
+        });
         describe('Current password validation', () => {
             test('should throw a 400 error if currentPassword is not sent', async () => { 
                 const id = 15;
@@ -982,5 +1014,75 @@ describe('users routes testing', () => {
         });
 
     });
-    // describe('/deleteUser/:id', () => {  })
+    describe('/deleteUser/:id Endpoint', () => {  
+        test('should delete an user and return user data', async () => {  
+            const user = await prisma.user.create({data: testUserCredentials});
+            const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/deleteUser/${user.id}`)
+                .set('token', userToken)
+                .expect(200)
+
+            expect(body.success).toBeTruthy();
+            expect(body.message).toBe('User has been successfully deleted.');
+            expect(body.data.user).toEqual({id: user.id, username: user.username, email: user.email});
+        });
+        test('should throw a 404 error if user is not found', async () => {  
+            const id = 1;
+            const user = await prisma.user.create({data: testUserCredentials});
+            const userToken = await JwtAdapter.generateJWT({id: user.id, username: user.username});
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/deleteUser/${id}`)
+                .set('token', userToken)
+                .expect(404)
+            
+            expect(body.success).toBeFalsy();
+            expect(body.error.message).toBe(`User with id ${id} not found`);
+        });
+        test('should throw a 400 error if ID is not a number', async () => {  
+            const id = 'abcde';
+            const userToken = await JwtAdapter.generateJWT({id: 1, username: testUser.username});
+
+            const {body} = await request(testServer.app)
+                .put(`/api/users/deleteUser/${id}`)
+                .set('token', userToken)
+                .expect(400)
+            
+            expect(body.success).toBeFalsy();
+            expect(body.error.message).toBe('ID argument is not a number');
+        });
+        describe('Token validation', () => {  
+            test('should throw a 401 error if token is not sent', async () => {             
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/deleteUser/20`)
+                    .expect(401)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe('No token sent');
+            });
+            test('should throw a 401 error if token is invalid', async () => {             
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/deleteUser/20`)
+                    .set('token', 'abcdfsfsfsfsgjdsjskjgsjgsk')
+                    .expect(401)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe('Invalid or expired token');
+            });
+            test('should throw a 401 error if token has expired', async () => { 
+                const id = 15;
+                const userToken = await JwtAdapter.generateJWT({id, username: testUserCredentials.username}, -1);
+    
+                const {body} = await request(testServer.app)
+                    .put(`/api/users/deleteUser/${id}`)
+                    .set('token', `${userToken}`)
+                    .expect(401)
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe('Invalid or expired token');
+            });
+        });
+    });
 });

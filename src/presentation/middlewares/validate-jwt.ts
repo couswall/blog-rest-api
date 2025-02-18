@@ -1,4 +1,5 @@
 import { JwtAdapter } from "@/config/jwt.adapter";
+import { CustomError } from "@/domain/errors/custom.error";
 import { NextFunction, Request, Response } from "express";
 
 export const validateJWT = (req: Request, res: Response, next: NextFunction) => {
@@ -19,8 +20,14 @@ export const validateJWT = (req: Request, res: Response, next: NextFunction) => 
             // console.log(payload);
             next();
         })
-        .catch(() => res.status(401).json({
-            success: false,
-            error: {message: 'Invalid token'}
-        }));
+        .catch(error => {
+            if (error instanceof CustomError) {
+                res.status(error.statusCode).json({
+                    success: false,
+                    error: {message: error.message}
+                });
+                return;
+            };
+            res.status(500).json({error: 'Internal server error'});
+        });
 };
