@@ -7,9 +7,9 @@
     "build": "rimraf ./dist && tsc",
     "start": "npm run build && node dist/app.js",
     "prisma:migrate:test": "dotenv -e .env.test -- npx prisma migrate deploy",
-    "test": "npm run prisma:migrate:test && jest",
-    "test:watch": "npm run prisma:migrate:test && jest --watch",
-    "test:coverage": "npm run prisma:migrate:test && jest --coverage"
+    "test": "npm run prisma:migrate:test && jest --runInBand",
+    "test:watch": "npm run prisma:migrate:test && jest --watch --runInBand",
+    "test:coverage": "npm run prisma:migrate:test && jest --coverage --runInBand"
   },
   "keywords": [],
   "author": "",

@@ -2,7 +2,6 @@ import { Router } from "express";
 import { BlogRoutes } from "@presentation/blogs/routes";
 import { UserRoutes } from "@presentation/users/routes";
 
-
 export class AppRoutes {
 
     static get routes(): Router {
