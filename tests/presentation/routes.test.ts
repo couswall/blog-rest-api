@@ -1,4 +1,3 @@
-import { AppRoutes } from '@/presentation/routes';
 import request from 'supertest';
 import { testServer } from "tests/test-server";
 
