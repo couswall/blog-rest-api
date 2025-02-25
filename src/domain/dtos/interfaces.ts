@@ -21,7 +21,7 @@ export interface ILoginUser {
     password: string;
 }
 
-export interface IUpdatePassword{
+export interface IUpdateUsername{
     id: number;
     username: string;
 }

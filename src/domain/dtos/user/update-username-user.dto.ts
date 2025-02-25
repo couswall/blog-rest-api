@@ -1,5 +1,6 @@
-import { IErrorMsg, IUpdatePassword } from "@src/domain/dtos/interfaces";
+import { IErrorMsg, IUpdateUsername } from "@src/domain/dtos/interfaces";
 import { ERROR_MESSAGES, FIELDS, ID_ERROR_MSG, regExs } from "@/domain/constants/dto/user.constants";
+import { ERROR_VALIDATION_MSG } from "@/domain/constants/dto/blog.constants";
 
 export class UpdateUsernameDto {
     constructor(
@@ -7,7 +8,7 @@ export class UpdateUsernameDto {
         public readonly username: string,
     ){}
     
-    static validate(props: IUpdatePassword): IErrorMsg[]{
+    static validate(props: IUpdateUsername): IErrorMsg[]{
         const {username} = props;
         let errors: IErrorMsg[] = [];
 
@@ -27,13 +28,13 @@ export class UpdateUsernameDto {
         return errors;
     };
 
-    static create(props: IUpdatePassword): [IErrorMsg[]?, string?, UpdateUsernameDto?]{
+    static create(props: IUpdateUsername): [IErrorMsg[]?, string?, UpdateUsernameDto?]{
         const {id, username} = props;
 
         if(!id || isNaN(id)) return [undefined, ID_ERROR_MSG, undefined];
         
         const errors: IErrorMsg[] = UpdateUsernameDto.validate(props);
-        if(errors.length > 0) return [errors, 'Validation errors in request', undefined];
+        if(errors.length > 0) return [errors, ERROR_VALIDATION_MSG, undefined];
         
         return [undefined, undefined, new UpdateUsernameDto(id, username)];
     }
