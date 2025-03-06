@@ -1,5 +1,6 @@
+import { BcryptAdapter } from "@/config/bcrypt.adapter";
 import { prisma } from "@/data/postgres/index";
-import { CreateUserDto, LoginUserDto, UpdateUsernameDto } from "@/domain/dtos";
+import { CreateUserDto, LoginUserDto, UpdatePasswordDto, UpdateUsernameDto } from "@/domain/dtos";
 import { UserEntity } from "@/domain/entities";
 import { CustomError } from "@/domain/errors/custom.error";
 import { COOLDOWN_DAYS, ERROR_MESSAGES } from "@/infrastructure/constants/user.constants";
@@ -15,6 +16,13 @@ jest.mock('@/data/postgres', () => ({
         },
     },
 }));
+
+jest.mock('@/config/bcrypt.adapter', () => ({
+    BcryptAdapter: {
+        compare: jest.fn(),
+        hash: jest.fn(),
+    }
+}))
 
 describe('user.datasource.impl tests', () => {  
     const userDatasourceImpl = new UserDatasourceImpl();
@@ -252,6 +260,114 @@ describe('user.datasource.impl tests', () => {
 
             await expect(userDatasourceImpl.updateUsername(dto!)).rejects.toThrow(
                 new CustomError(`Username ${dto!.username} already exists`)
+            );
+        });
+    });
+    
+    describe('updatePassword function', () => {
+        const updatePasswordUser = {
+            id: userObj.id,
+            currentPassword: userObj.password,
+            newPassword: 'new_Password1234//',
+            confirmPassword: 'new_Password1234//',
+        };
+        const userUpdatedPassEntity = UserEntity.fromObject({
+            ...userObj,
+            password: updatePasswordUser.newPassword,
+        });
+        test('should update password successfully', async() => {  
+            const [,,dto] = UpdatePasswordDto.create(updatePasswordUser);
+            
+            jest.spyOn(userDatasourceImpl, 'findById').mockResolvedValue(mockUserEntity);
+            (BcryptAdapter.compare as jest.Mock)
+                .mockImplementation((password, hash) => password === dto!.currentPassword && hash === mockUserEntity.password);
+            
+            (BcryptAdapter.hash as jest.Mock).mockReturnValue("newHashedPassword");
+            
+            (prisma.user.update as jest.Mock).mockResolvedValue(userUpdatedPassEntity);
+            
+            const result = await userDatasourceImpl.updatePassword(dto!);
+
+            expect(result).toEqual(userUpdatedPassEntity);
+            expect(prisma.user.update).toHaveBeenCalled();
+            expect(prisma.user.update).toHaveBeenCalledWith({
+                where: {id: dto!.id},
+                data: {password: 'newHashedPassword'}
+            })
+        });
+
+        test('should throw an error if user does not exist', async() => {  
+            const [,,dto] = UpdatePasswordDto.create(updatePasswordUser)
+
+            jest.spyOn(userDatasourceImpl, 'findById').mockRejectedValue(new CustomError(`User with id ${dto!.id} not found`, 404));
+
+            await expect(userDatasourceImpl.updatePassword(dto!)).rejects.toThrow(CustomError);
+            await expect(userDatasourceImpl.updatePassword(dto!)).rejects.toThrow(`User with id ${dto!.id} not found`);
+        });
+
+        test('should throw an error if the current password is invalid', async () => {  
+            const [,,dto] = UpdatePasswordDto.create({
+                ...updatePasswordUser,
+                currentPassword: 'WrongPassword12345/',
+            });
+
+            jest.spyOn(userDatasourceImpl, 'findById').mockResolvedValue(mockUserEntity);
+
+            (BcryptAdapter.compare as jest.Mock).mockReturnValue(false);
+
+            await expect(userDatasourceImpl.updatePassword(dto!)).rejects.toThrow(
+                new CustomError('Invalid current password', 400)
+            );
+        });
+
+        test('should throw an error if new password is the same as the current password', async () => {  
+            const [,,dto] = UpdatePasswordDto.create({
+                ...updatePasswordUser,
+                newPassword: userObj.password,
+                confirmPassword: userObj.password
+            });
+
+            jest.spyOn(userDatasourceImpl, 'findById').mockResolvedValue(mockUserEntity);
+
+            (BcryptAdapter.compare as jest.Mock)
+                .mockImplementation((password, hash) => password === dto!.currentPassword && hash === mockUserEntity.password);
+
+            (BcryptAdapter.compare as jest.Mock).mockReturnValue(true);
+
+            await expect(userDatasourceImpl.updatePassword(dto!)).rejects.toThrow(
+                new CustomError('Please choose a different password from your current one', 400)
+            );
+        });
+    });
+
+    describe('deleteById function', () => {  
+        test('should delete an user successfully', async () => {  
+            const mockDeletedUserEnt = UserEntity.fromObject({
+                ...userObj,
+                deletedAt: new Date()
+            });
+
+            jest.spyOn(userDatasourceImpl, 'findById').mockResolvedValue(mockUserEntity);
+            (prisma.user.update as jest.Mock).mockResolvedValue(mockDeletedUserEnt);
+
+            const result = await userDatasourceImpl.deleteById(userObj.id);
+
+            expect(result).toEqual(mockDeletedUserEnt);
+            expect(prisma.user.update).toHaveBeenCalled();
+            expect(prisma.user.update).toHaveBeenCalledWith({
+                where: {id: userObj.id},
+                data: {deletedAt: expect.any(Date)}
+            });
+        });
+        
+        test('should throw an error if user does not exist', async () => {  
+            const id = 10;
+            jest.spyOn(userDatasourceImpl, 'findById').mockRejectedValue(
+                new CustomError(`User with id ${id} not found`, 404)
+            );
+
+            await expect(userDatasourceImpl.deleteById(id)).rejects.toThrow(
+                new CustomError(`User with id ${id} not found`, 404)
             );
         });
     });
