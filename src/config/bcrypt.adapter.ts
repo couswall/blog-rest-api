@@ -7,7 +7,7 @@ export class BcryptAdapter {
         return bcrypt.hashSync(password, salt);
     };
 
-    static compare(password: string, hash: string){
+    static compare(password: string, hash: string): boolean{
         return bcrypt.compareSync(password, hash);
     }
 }

@@ -11,6 +11,8 @@ import { ERROR_VALIDATION_MSG } from "@/domain/constants/dto/blog.constants";
 import { prisma } from "@/data/postgres";
 import { CustomError } from "@/domain/errors/custom.error";
 import { ERROR_MESSAGES } from "@/infrastructure/constants/user.constants";
+import { LoginUser } from "@/domain/use-cases";
+import { LoginUserDto } from "@/domain/dtos";
 
 jest.mock("@/config/jwt.adapter");
 jest.mock("@/config/bcrypt.adapter");
@@ -56,7 +58,7 @@ describe('UserController tests', () => {
         jest.clearAllMocks();
     });
 
-    describe('createUser controller', () => {  
+    describe('createUser', () => {  
         test('should return 201 and JWT when user is created successfully', async () => {  
             mockRequest.body = {
                 username: userObj.username,
@@ -152,6 +154,85 @@ describe('UserController tests', () => {
                 success: false,
                 error: {message: ERROR_MESSAGES.EMAIL.ALREADY_EXISTS}
             });
+        });
+    });
+
+    describe('loginUser', () => {  
+        test('should return 200 and a JWT when the user logs in successfully', async () => {  
+            mockRequest.body = {
+                username: userObj.username,
+                password: userObj.password,
+            };
+
+            jest.spyOn(LoginUser.prototype, "execute").mockResolvedValue(mockUserEntity);
+            jest.spyOn(BcryptAdapter, 'compare').mockReturnValue(true);
+            jest.spyOn(JwtAdapter, 'generateJWT').mockResolvedValue('any-token');
+    
+            await new Promise<void>((resolve) => {
+                userController.loginUser(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+                success: true,
+                message: 'Login successful',
+                data: {user: expect.any(Object), token: 'any-token'},
+            }));
+        });
+        test('should throw a 400 error if request body is empty', async () => {  
+            mockRequest.body = {};
+
+            await userController.loginUser(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+                success: false,
+                error: expect.any(Object)
+            }));
+        });
+        test('should throw a 404 error if user does not exist', async () => {  
+           mockRequest.body = {
+            username: userObj.username,
+            password: userObj.password,
+           }; 
+
+           (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+           jest.spyOn(LoginUser.prototype, 'execute').mockRejectedValue(new CustomError(`Invalid credentials`, 404));
+
+           await new Promise<void>((resolve) => {
+                userController.loginUser(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+           });
+
+           expect(mockResponse.status).toHaveBeenCalledWith(404);
+           expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+               success: false,
+                error: {message: 'Invalid credentials'}
+            }));
+        });
+        test('should throw a 400 error if credentials are invalid', async () => {  
+            mockRequest.body = {
+                username: userObj.username,
+                password: 'WrongPassword45!!!',
+            };
+            
+            (prisma.user.findUnique as jest.Mock).mockResolvedValue(userObj);
+            jest.spyOn(LoginUser.prototype, 'execute').mockResolvedValue(mockUserEntity);
+            jest.spyOn(BcryptAdapter, 'compare').mockReturnValue(false);
+
+            await new Promise<void>((resolve) => {
+                userController.loginUser(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+            
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+                success: false,
+                error: {
+                    message: 'Invalid credentials'
+                }
+            }));
         });
     });
 });
