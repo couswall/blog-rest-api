@@ -10,8 +10,8 @@ import { UserController } from "@/presentation/users/controller";
 import { ERROR_VALIDATION_MSG } from "@/domain/constants/dto/blog.constants";
 import { prisma } from "@/data/postgres";
 import { CustomError } from "@/domain/errors/custom.error";
-import { ERROR_MESSAGES } from "@/infrastructure/constants/user.constants";
-import { LoginUser } from "@/domain/use-cases";
+import { COOLDOWN_DAYS, ERROR_MESSAGES } from "@/infrastructure/constants/user.constants";
+import { LoginUser, UpdateUsername } from "@/domain/use-cases";
 import { LoginUserDto } from "@/domain/dtos";
 
 jest.mock("@/config/jwt.adapter");
@@ -26,18 +26,11 @@ jest.mock('@/data/postgres', () => ({
         },
     },
 }));
-class MockUserRepository extends UserRepository {
-    create = jest.fn();
-    login = jest.fn();
-    findById = jest.fn();
-    updateUsername = jest.fn();
-    updatePassword = jest.fn();
-    deleteById = jest.fn();
-}
 
 describe('UserController tests', () => { 
-    const mockUserRepository = new MockUserRepository();
-    const userController = new UserController(mockUserRepository);
+    const datasource = new UserDatasourceImpl();
+    const userRepository = new UserRepositoryImpl(datasource);
+    const userController = new UserController(userRepository);
     let mockRequest: Partial<Request> = { body: {}, params: {}, headers: {} };
     let mockResponse: Partial<Response> = {
         status: jest.fn().mockReturnThis(),
@@ -56,6 +49,7 @@ describe('UserController tests', () => {
     
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.restoreAllMocks();
     });
 
     describe('createUser', () => {  
@@ -66,7 +60,7 @@ describe('UserController tests', () => {
                 password: userObj.password,
             };
 
-            jest.spyOn(CreateUser.prototype, "execute").mockResolvedValue(mockUserEntity);
+            (prisma.user.create as jest.Mock).mockReturnValue(mockUserEntity);
             jest.spyOn(JwtAdapter, 'generateJWT').mockResolvedValue('any-token');
     
             await new Promise<void>((resolve) => {
@@ -120,7 +114,6 @@ describe('UserController tests', () => {
             };
 
             (prisma.user.findFirst as jest.Mock).mockResolvedValue(userObj);
-            jest.spyOn(CreateUser.prototype, "execute").mockRejectedValue(new CustomError(ERROR_MESSAGES.USERNAME.ALREADY_EXISTS, 404));
     
             await new Promise<void>((resolve) => {
                 userController.createUser(mockRequest as Request, mockResponse as Response);
@@ -141,8 +134,10 @@ describe('UserController tests', () => {
                 password: userObj.password,
             };
 
-            (prisma.user.findFirst as jest.Mock).mockResolvedValue(userObj);
-            jest.spyOn(CreateUser.prototype, "execute").mockRejectedValue(new CustomError(ERROR_MESSAGES.EMAIL.ALREADY_EXISTS, 404));
+            (prisma.user.findFirst as jest.Mock).mockResolvedValue({
+                ...userObj,
+                username: 'another_username'
+            });
     
             await new Promise<void>((resolve) => {
                 userController.createUser(mockRequest as Request, mockResponse as Response);
@@ -164,7 +159,7 @@ describe('UserController tests', () => {
                 password: userObj.password,
             };
 
-            jest.spyOn(LoginUser.prototype, "execute").mockResolvedValue(mockUserEntity);
+            (prisma.user.findUnique as jest.Mock).mockReturnValue(userObj);
             jest.spyOn(BcryptAdapter, 'compare').mockReturnValue(true);
             jest.spyOn(JwtAdapter, 'generateJWT').mockResolvedValue('any-token');
     
@@ -198,7 +193,6 @@ describe('UserController tests', () => {
            }; 
 
            (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-           jest.spyOn(LoginUser.prototype, 'execute').mockRejectedValue(new CustomError(`Invalid credentials`, 404));
 
            await new Promise<void>((resolve) => {
                 userController.loginUser(mockRequest as Request, mockResponse as Response);
@@ -233,6 +227,138 @@ describe('UserController tests', () => {
                     message: 'Invalid credentials'
                 }
             }));
+        });
+    });
+
+    describe('updateUsername', () => {  
+        test('should return 200 status when username is updated successfully', async () => {  
+            mockRequest.params = {id: '1'};
+            mockRequest.body = {username: 'updated_username'};
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValueOnce(mockUserEntity);
+            jest.spyOn(userRepository, 'findById').mockResolvedValueOnce(mockUserEntity);
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValueOnce(null);
+            (prisma.user.update as jest.Mock).mockResolvedValue({
+                ...userObj, 
+                username: 'updated_username',
+                usernameUpdatedAt: new Date()
+            });
+
+            await new Promise<void>((resolve) => {
+                userController.updateUsername(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+                success: true,
+                message: 'Username successfully updated',
+                data: {user: expect.any(Object)}
+            }));
+        });
+        test('should return 200 status when updated username is the same as current username', async () => {  
+            mockRequest.params = {id: '1'};
+            mockRequest.body = {username: userObj.username};
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValueOnce(mockUserEntity);
+            
+            await new Promise<void>((resolve) => {
+                userController.updateUsername(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(prisma.user.update).not.toHaveBeenCalled();
+        });
+        test('should throw a 400 error if request body is empty', async () => {  
+            mockRequest.params = {id: '1'};
+            mockRequest.body = {};
+
+            await userController.updateUsername(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+                success: false,
+                error: expect.any(Object)
+            }));
+        });
+        test('should throw a 400 error if ID is not a number', async () => {  
+            mockRequest.params = {id: 'abcd'};
+            mockRequest.body = {username: 'updated_username'};
+
+            await userController.updateUsername(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+                success: false,
+                error: expect.any(Object)
+            }));
+        });
+        test('should throw a 404 error if user does not exist', async () => {  
+            const id = 500;
+            mockRequest.params = {id: String(id)};
+            mockRequest.body = {username: 'updated_username'};
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValueOnce(null);
+            
+            await new Promise<void>((resolve) => {
+                userController.updateUsername(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(404);
+            expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+                success: false,
+                error: {message: `User with id ${id} not found`}
+            }));
+        });
+        test('should throw a 403 error if usernameUpdateAt is less than cooldown days', async () => {  
+            mockRequest.params = {id: '2'};
+            mockRequest.body = {username: 'updated_username'};
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValue({
+                ...userObj,
+                usernameUpdatedAt: new Date(new Date().setDate(new Date().getDate() - 10))
+            });
+
+            await new Promise<void>((resolve) => {
+                userController.updateUsername(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(403);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: `You can only change your username once every ${COOLDOWN_DAYS} days`}
+            });
+            expect(prisma.user.update).not.toHaveBeenCalled();
+        });
+        test('should throw a 400 error if username already exists', async () => {  
+            const updatedUsername = 'updated_username';
+            mockRequest.params = {id: '2'};
+            mockRequest.body = {username: updatedUsername};
+            const mockExistedUser = {
+                ...userObj,
+                username: updatedUsername,
+                id: 9,
+                email: 'anotherEmail@google.com'
+            };
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValueOnce(mockUserEntity);
+            (prisma.user.findFirst as jest.Mock).mockResolvedValueOnce(mockExistedUser);
+
+            await new Promise<void>((resolve) => {
+                userController.updateUsername(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: `Username ${updatedUsername} already exists`}
+            });
+            expect(prisma.user.update).not.toHaveBeenCalled();
         });
     });
 });
