@@ -467,4 +467,78 @@ describe('UserController tests', () => {
             expect(prisma.user.update).not.toHaveBeenCalled();
         });
     });
+    describe('deleteUser', () => {  
+        test('should return 200 status when deleted user successfully', async () => {  
+            mockRequest.params = {id: '2'};
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValue(mockUserEntity);
+            (prisma.user.update as jest.Mock).mockResolvedValue({
+                ...userObj,
+                deletedAt: new Date(),
+            });
+
+            await new Promise<void>((resolve) => {
+                userController.deleteUser(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'User has been successfully deleted.',
+                data: expect.any(Object),
+            });
+        });
+        test('should throw a 400 error if ID is not a number', async () => {  
+            mockRequest.params = {id: 'abcd'};
+
+            await userController.deleteUser(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: 'ID argument is not a number'}
+            });
+            expect(prisma.user.update).not.toHaveBeenCalled();
+        });
+        test('should throw 404 error when user does not exist', async () => {  
+            const id = 2;
+            mockRequest.params = {id: String(2)};
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValue(null);
+
+            await new Promise<void>((resolve) => {
+                userController.deleteUser(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(404);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: `User with id ${id} not found`}
+            });
+            expect(prisma.user.update).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('handleError', () => {  
+        test('should return 500 status for unexpected errors', async () => {  
+            mockRequest.params = {id: '2'};
+
+            const consoleSpy = jest.spyOn(console, 'log');
+            (prisma.user.findFirst as jest.Mock).mockRejectedValue(new Error ('Error testing'));
+
+            await new Promise<void>((resolve) => {
+                userController.deleteUser(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(500);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                error: 'Internal server error'
+            });
+            expect(consoleSpy).toHaveBeenCalled();
+        });
+    });
+
 });
