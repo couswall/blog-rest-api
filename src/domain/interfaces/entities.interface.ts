@@ -1,4 +1,4 @@
-import { CategoryEntity, UserEntity, CommentEntity, LikeEntity } from "@/domain/entities";
+import { CategoryEntity, UserEntity, CommentEntity, LikeEntity, BlogEntity } from "@/domain/entities";
 
 export interface ICreateBlogEntity{
     id: number;
@@ -9,7 +9,14 @@ export interface ICreateBlogEntity{
     deletedAt: Date | null;
     authorId: number;
     author: UserEntity;
-    categories: CategoryEntity[];
-    comments: CommentEntity[];
-    likes: LikeEntity[];
+    categories?: CategoryEntity[];
+    comments?: CommentEntity[];
+    likes?: LikeEntity[];
+}
+
+export interface ICreateCategoryEntity{
+    id: number;
+    name: string;
+    blogs: BlogEntity[];
+    deletedAt: Date | null;
 }
