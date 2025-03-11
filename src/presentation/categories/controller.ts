@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { CreateCategoryDto } from "@/domain/dtos";
 import { CategoryRepository } from "@/domain/repositories/category.repository";
-import { CreateCategory } from "@/domain/use-cases/category";
+import { CreateCategory, GetAllCategory } from "@/domain/use-cases/category";
 import { CustomError } from "@/domain/errors/custom.error";
+import { CATEGORY_RESPONSE } from "@/infrastructure/constants/category.constants";
 
 export class CategoryController {
     constructor(
@@ -35,7 +36,7 @@ export class CategoryController {
             .execute(dto!)
             .then(category => res.status(200).json({
                 success: true,
-                message: 'Category created successfully',
+                message: CATEGORY_RESPONSE.SUCCESS.CREATE,
                 data: {
                     id: category.id,
                     name: category.name,
@@ -45,7 +46,15 @@ export class CategoryController {
     };
 
     public getAllCategories = (req: Request, res: Response) => {
-        res.json({message: 'get all categories'});
-        return;
+        new GetAllCategory(this.categoryRepository)
+            .execute()
+            .then(categories => res.status(200).json({
+                success: true,
+                data: categories.map(category => ({
+                    id: category.id,
+                    name: category.name
+                }))
+            }))
+            .catch(error => this.handleError(res, error));
     };
 }

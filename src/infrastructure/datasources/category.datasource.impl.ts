@@ -1,7 +1,7 @@
 import { prisma } from "@/data/postgres";
 import { CategoryDatasource } from "@/domain/datasources/category.datasource";
 import { CreateCategoryDto } from "@/domain/dtos";
-import { CategoryEntity } from "@/domain/entities";
+import { BlogEntity, CategoryEntity, UserEntity } from "@/domain/entities";
 import { CustomError } from "@/domain/errors/custom.error";
 import { CATEGORY_RESPONSE } from "@/infrastructure/constants/category.constants";
 
@@ -20,7 +20,27 @@ export class CategoryDatasourceImpl implements CategoryDatasource{
         return CategoryEntity.fromObject({...newCategory, blogs: []});
     }
     async getAll(): Promise<CategoryEntity[]> {
-        throw new Error("Method not implemented.");
+        const allCategories = await prisma.category.findMany({
+            include: {
+                blogs: {
+                    include: {
+                        author: true,
+                    }
+                }
+            }
+        });
+
+        return allCategories.map((category) =>
+          CategoryEntity.fromObject({
+            ...category,
+            blogs: category.blogs.map((blog) =>
+              BlogEntity.fromObject({
+                ...blog,
+                author: UserEntity.fromObject(blog.author),
+              })
+            ),
+          })
+        );
     }
 
 }
