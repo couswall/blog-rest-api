@@ -13,6 +13,7 @@ import { CustomError } from "@/domain/errors/custom.error";
 import { COOLDOWN_DAYS, ERROR_MESSAGES } from "@/infrastructure/constants/user.constants";
 import { LoginUser, UpdateUsername } from "@/domain/use-cases";
 import { LoginUserDto } from "@/domain/dtos";
+import { ID_ERROR_MSG } from "@/domain/constants/dto/user.constants";
 
 jest.mock("@/config/jwt.adapter");
 jest.mock("@/config/bcrypt.adapter");
@@ -357,6 +358,111 @@ describe('UserController tests', () => {
             expect(mockResponse.json).toHaveBeenCalledWith({
                 success: false,
                 error: {message: `Username ${updatedUsername} already exists`}
+            });
+            expect(prisma.user.update).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('updatePassword', () => {
+        const updatedPasswordUser = {
+            currentPassword: userObj.password,
+            newPassword: 'updatedPassword!!!77',
+            confirmPassword: 'updatedPassword!!!77',
+        };
+        test('should return a 200 status when updated password successfully', async () => {  
+            mockRequest.params = {id: '2'};
+            mockRequest.body = {...updatedPasswordUser};
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValue(mockUserEntity);
+            jest.spyOn(BcryptAdapter, 'compare')
+                .mockReturnValueOnce(true)
+                .mockReturnValueOnce(false);
+            (prisma.user.update as jest.Mock).mockResolvedValue({
+                ...userObj,
+                password: updatedPasswordUser.newPassword
+            });
+            
+            await new Promise<void>((resolve) => {
+                userController.updatePassword(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Password successfully updated',
+                data: expect.any(Object)
+            });
+            expect(prisma.user.update).toHaveBeenCalled();
+        });
+        test('should throw a 400 error if request body is empty', async () => {  
+            mockRequest.params = {id: '2'};
+            mockRequest.body = {};
+
+            userController.updatePassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {
+                    message: ERROR_VALIDATION_MSG,
+                    errors: expect.any(Array),
+                }
+            });
+        });
+        test('should throw a 400 error if ID is not a number', async () => {  
+            mockRequest.params = {id: 'abcd'};
+            mockRequest.body = {...updatedPasswordUser};
+
+            userController.updatePassword(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: ID_ERROR_MSG,}
+            });
+        });
+        test('should throw a 400 error when current password is invalid', async () => {  
+            mockRequest.params = {id: '2'};
+            mockRequest.body = {...updatedPasswordUser};
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValue(mockUserEntity);
+            jest.spyOn(BcryptAdapter, 'compare').mockReturnValue(false);
+            
+            await new Promise<void>((resolve) => {
+                userController.updatePassword(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: 'Invalid current password'}
+            });
+            expect(prisma.user.update).not.toHaveBeenCalled();
+        });
+        test('should throw a 400 error when updated password is the current password', async () => {  
+            mockRequest.params = {id: '2'};
+            mockRequest.body = {
+                currentPassword: userObj.password,
+                newPassword: userObj.password,
+                confirmPassword: userObj.password,
+            };
+
+            (prisma.user.findFirst as jest.Mock).mockResolvedValue(mockUserEntity);
+            jest.spyOn(BcryptAdapter, 'compare')
+                .mockReturnValueOnce(true)
+                .mockReturnValueOnce(true);
+            
+            await new Promise<void>((resolve) => {
+                userController.updatePassword(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: 'Please choose a different password from your current one'}
             });
             expect(prisma.user.update).not.toHaveBeenCalled();
         });
