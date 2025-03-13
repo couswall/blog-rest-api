@@ -10,7 +10,7 @@ export class CategoryEntity {
     ){};
 
     public static fromObject(object: ICreateCategoryEntity): CategoryEntity{
-        const {id, name, blogs, deletedAt} = object;
+        const {id, name, blogs = [], deletedAt} = object;
         return new CategoryEntity(id, name, blogs, deletedAt);
     }
 }

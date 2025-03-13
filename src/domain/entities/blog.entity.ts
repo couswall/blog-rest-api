@@ -26,9 +26,9 @@ export class BlogEntity {
             object.deletedAt,
             object.authorId,
             object.author,
-            object.categories,
-            object.comments,
-            object.likes,
+            object.categories ?? [],
+            object.comments ?? [],
+            object.likes ?? [],
         );
     };
 

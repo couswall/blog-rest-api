@@ -23,23 +23,22 @@ export class CategoryDatasourceImpl implements CategoryDatasource{
         const allCategories = await prisma.category.findMany({
             include: {
                 blogs: {
-                    include: {
-                        author: true,
-                    }
+                    include: {author: true, categories: true}
                 }
             }
         });
 
         return allCategories.map((category) =>
-          CategoryEntity.fromObject({
-            ...category,
-            blogs: category.blogs.map((blog) =>
-              BlogEntity.fromObject({
-                ...blog,
-                author: UserEntity.fromObject(blog.author),
-              })
-            ),
-          })
+            CategoryEntity.fromObject({
+                ...category,
+                blogs: category.blogs.map((blog) =>
+                    BlogEntity.fromObject({
+                        ...blog,
+                        author: UserEntity.fromObject(blog.author),
+                        categories: blog.categories.map(CategoryEntity.fromObject)
+                    })
+                ),
+            })
         );
     }
 

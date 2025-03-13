@@ -4,6 +4,7 @@ export const CREATE_BLOG = {
     FIELDS: {
         TITLE: 'title',
         CONTENT: 'content',
+        CATEGORIES: 'categoriesIds'
     },
     ERRORS: {
         TITLE: {
@@ -22,6 +23,11 @@ export const CREATE_BLOG = {
         },
         AUTOR_ID:{
             NUMBER: 'authorId must be a number'
+        },
+        CATEGORIES: {
+            MANDATORY: 'Category is mandatory',
+            ARRAY: 'Categories must be an array',
+            NUMBER: 'Categories Ids must be a number type',
         }
     }
 }

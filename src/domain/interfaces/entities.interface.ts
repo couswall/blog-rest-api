@@ -17,6 +17,6 @@ export interface ICreateBlogEntity{
 export interface ICreateCategoryEntity{
     id: number;
     name: string;
-    blogs: BlogEntity[];
+    blogs?: BlogEntity[];
     deletedAt: Date | null;
 }
