@@ -50,7 +50,7 @@ export class BlogController {
         
         new CreateBlog(this.blogRepository)
             .execute(dto!)
-            .then(blog => res.status(200).json({
+            .then(blog => res.status(201).json({
                 success: true,
                 message: BLOG_RESPONSE.SUCCESS.CREATE,
                 data: {

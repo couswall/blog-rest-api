@@ -34,7 +34,7 @@ export class CategoryController {
 
         new CreateCategory(this.categoryRepository)
             .execute(dto!)
-            .then(category => res.status(200).json({
+            .then(category => res.status(201).json({
                 success: true,
                 message: CATEGORY_RESPONSE.SUCCESS.CREATE,
                 data: {
