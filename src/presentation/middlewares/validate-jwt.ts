@@ -1,6 +1,7 @@
+import { NextFunction, Request, Response } from "express";
+import { JWT_ADAPTER } from "@/config/constants";
 import { JwtAdapter } from "@/config/jwt.adapter";
 import { CustomError } from "@/domain/errors/custom.error";
-import { NextFunction, Request, Response } from "express";
 
 export const validateJWT = async (req: Request, res: Response, next: NextFunction) => {
     const token: string | undefined = req.header('token');
@@ -9,7 +10,7 @@ export const validateJWT = async (req: Request, res: Response, next: NextFunctio
         res.status(401).json({
             success: false,
             error: {
-                message: 'No token sent'
+                message: JWT_ADAPTER.ERRORS.NO_TOKEN,
             }
         });
         return;

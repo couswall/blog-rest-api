@@ -34,7 +34,8 @@ export class CreateBlogDto{
         if(content.trim().length === 0) errors.push({field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.BLANK_SPACES});
         if(content.length < 15) errors.push({field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.MIN_LENGTH});
         if(content.length > 500) errors.push({field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.MAX_LENGTH});
-
+        
+        if(categoriesIds.length === 0) errors.push({field: CREATE_BLOG.FIELDS.CATEGORIES, message: CREATE_BLOG.ERRORS.CATEGORIES.EMPTY});
         if(categoriesIds.length > 0 && categoriesIds.some(category => typeof category !== 'number'))
             errors.push({field: CREATE_BLOG.FIELDS.CATEGORIES, message: CREATE_BLOG.ERRORS.CATEGORIES.NUMBER});
         

@@ -27,7 +27,8 @@ export const CREATE_BLOG = {
         CATEGORIES: {
             MANDATORY: 'Category is mandatory',
             ARRAY: 'Categories must be an array',
-            NUMBER: 'Categories Ids must be a number type',
+            NUMBER: 'Categories Ids array must be number type',
+            EMPTY: 'Categories Ids must contain at least one category',
         }
     }
 }

@@ -3,7 +3,6 @@ import { CreateBlogDto } from "@/domain/dtos/blogs";
 import { BlogRepository } from "@/domain/repositories/blog.repository";
 import { CreateBlog } from "@/domain/use-cases/blog";
 import { CustomError } from '@/domain/errors/custom.error';
-import { title } from "process";
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 
 
@@ -56,7 +55,7 @@ export class BlogController {
                 data: {
                     blog: {
                         id: blog.id,
-                        title: blog.id,
+                        title: blog.title,
                         author: blog.author,
                         createdAt: blog.createdAt,
                         categories: blog.categories.map(category => ({
