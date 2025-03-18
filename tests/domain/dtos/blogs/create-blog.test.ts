@@ -21,7 +21,6 @@ describe('create-blog.ts tests', () => {
             const blogObj = {...newBlogRequest} as unknown as ICreateBlogDto;
             const [errorMessages, message, dto] = CreateBlogDto.create(blogObj);
     
-            console.log(errorMessages, message, dto)
             expect(errorMessages).toBeUndefined();
             expect(message).toBe(CREATE_BLOG.ERRORS.AUTOR_ID.NUMBER);
             expect(dto).toBeUndefined();
