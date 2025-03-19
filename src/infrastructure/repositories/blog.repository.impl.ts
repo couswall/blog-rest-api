@@ -12,4 +12,8 @@ export class BlogRepositoryImpl implements BlogRepository{
     create(createBlogDto: CreateBlogDto): Promise<BlogEntity> {
         return this.datasource.create(createBlogDto);
     }
+
+    getBlogById(id: number): Promise<BlogEntity> {
+        return this.datasource.getBlogById(id);
+    }
 }

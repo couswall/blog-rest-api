@@ -1,11 +1,17 @@
-import { BlogEntity, UserEntity } from "@/domain/entities";
+import { ILikeEntityFromObject } from "@/domain/interfaces/entities.interface";
 
 export class LikeEntity {
     constructor(
         public id: number,
         public userId: number,
         public blogId: number,
-        public blog: BlogEntity,
-        public user: UserEntity,
     ){};
+
+    public static fromObject(likeObject: ILikeEntityFromObject): LikeEntity{
+        return new LikeEntity(
+            likeObject.id,
+            likeObject.userId,
+            likeObject.blogId,
+        );
+    };
 }

@@ -1,7 +1,7 @@
 import { prisma } from "@/data/postgres";
 import { BlogDatasource } from "@/domain/datasources/blog.datasource";
 import { CreateBlogDto } from "@/domain/dtos/blogs";
-import { BlogEntity, CategoryEntity, UserEntity } from "@/domain/entities";
+import { BlogEntity, CategoryEntity, CommentEntity, UserEntity } from "@/domain/entities";
 import { CustomError } from "@/domain/errors/custom.error";
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 
@@ -39,5 +39,25 @@ export class BlogDatasourceImpl implements BlogDatasource {
             author: UserEntity.fromObject(newBlog.author),
             categories: newBlog.categories.map(category => CategoryEntity.fromObject(category))
         });
-    }
+    };
+
+    async getBlogById(id: number): Promise<BlogEntity> {
+        const existingBlog = await prisma.blog.findFirst({
+            where: {id, deletedAt: null},
+            include: {
+                categories: true, 
+                author: true,
+                comments: true,
+                likes: true
+            }
+        });
+
+        if(!existingBlog) throw new CustomError(`Blog with id ${id} does not exist`);
+        
+        return BlogEntity.fromObject({
+            ...existingBlog,
+            author: UserEntity.fromObject(existingBlog.author),
+            categories: existingBlog.categories.map(category => CategoryEntity.fromObject(category)),
+        })
+    };
 }

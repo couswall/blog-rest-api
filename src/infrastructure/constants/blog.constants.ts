@@ -3,6 +3,7 @@ export const BLOG_RESPONSE = {
         EXISTING_CATEGORIES: 'One or more categories do not exist',
     },
     SUCCESS: {
-        CREATE: 'Category created successfully',
+        CREATE: 'Blog created successfully',
+        GET_BLOG_BY_ID: 'Got Blog by ID successfully'
     }
 };

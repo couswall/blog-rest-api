@@ -20,3 +20,18 @@ export interface ICreateCategoryEntity{
     blogs?: BlogEntity[];
     deletedAt: Date | null;
 }
+
+export interface ICommentEntityFromObject{
+    id: number;
+    content: string;
+    createdAt: Date;
+    authorId: number;
+    blogId: number;
+    deletedAt: Date | null;
+}
+
+export interface ILikeEntityFromObject{
+    id: number;
+    userId: number;
+    blogId: number;
+}

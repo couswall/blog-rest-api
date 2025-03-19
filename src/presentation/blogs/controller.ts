@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { CreateBlogDto } from "@/domain/dtos/blogs";
 import { BlogRepository } from "@/domain/repositories/blog.repository";
-import { CreateBlog } from "@/domain/use-cases/blog";
+import { CreateBlog, GetByIdBlog } from "@/domain/use-cases/blog";
 import { CustomError } from '@/domain/errors/custom.error';
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
+import { ID_ERROR_MSG } from "@/domain/constants/dto/user.constants";
+import { BlogEntity } from "@/domain/entities";
 
 
 export class BlogController {
@@ -29,8 +31,32 @@ export class BlogController {
     };
     
     public getBlogById = (req: Request, res: Response) => {
-        res.json({message: 'Get blog by id'});
-        return;
+        const blogId = +req.params.id;
+        if (!blogId || isNaN(blogId)) {
+            res.status(400).json({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+            return;
+        }
+
+        new GetByIdBlog(this.blogRepository)
+            .execute(blogId)
+            .then(blog => res.status(200).json({
+                success: true,
+                message: BLOG_RESPONSE.SUCCESS.GET_BLOG_BY_ID,
+                data: {
+                    blog: {
+                        ...blog.toJSON(),
+                        author: {id: blog.author.id, username: blog.author.username},
+                        categories: blog.categories.map(category => ({
+                            id: category.id,
+                            name: category.name,
+                        }))
+                    },
+                }
+            }))
+            .catch(error => this.handleError(res, error));
     };
 
     public createBlog = (req: Request, res: Response) => {
