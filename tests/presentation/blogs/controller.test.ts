@@ -6,11 +6,13 @@ import { prisma } from "@/data/postgres";
 import { existingCategories, newBlogPrisma, newBlogRequest, userObj } from "tests/fixtures";
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 import { CREATE_BLOG } from "@/domain/constants/dto/blog.constants";
+import { ID_ERROR_MSG } from "@/domain/constants/dto/user.constants";
 
 jest.mock('@/data/postgres', () => ({
     prisma: {
         blog: {
             create: jest.fn(),
+            findFirst: jest.fn(),
         },
         user: {
             findFirst: jest.fn(),
@@ -139,6 +141,49 @@ describe('BlogController tests', () => {
             expect(mockResponse.json).toHaveBeenCalledWith({
                 success: false,
                 error: {message: BLOG_RESPONSE.ERRORS.EXISTING_CATEGORIES,}
+            });
+        });
+    });
+
+    describe('getBlogById', () => {  
+        test('should return a 200 status and a blog', async () => {
+            const id = 1;
+            mockRequest.params = {id: String(id)};
+            
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(newBlogPrisma);
+
+            await new Promise<void>((resolve) => {
+                blogController.getBlogById(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+            
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                message: BLOG_RESPONSE.SUCCESS.GET_BLOG_BY_ID,
+                data: {blog: expect.any(Object)}
+            });
+        });
+        test('should throw a 400 error if ID is not provided', async () => {  
+            mockRequest.params = {};
+            
+            await blogController.getBlogById(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+        });
+        test('should throw a 400 error if ID is not a number', async () => {  
+            mockRequest.params = {id: 'abc'};
+
+            await blogController.getBlogById(mockRequest as Request, mockResponse as Response);
+            
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: ID_ERROR_MSG}
             });
         });
     });

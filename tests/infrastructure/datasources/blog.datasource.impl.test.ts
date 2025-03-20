@@ -17,6 +17,7 @@ jest.mock('@/data/postgres', () => ({
         },
         blog: {
             create: jest.fn(),
+            findFirst: jest.fn(),
         }
     }
 }));
@@ -75,6 +76,34 @@ describe('blog.datasource.impl test', () => {
 
             await expect(blogDatasource.create(dto!)).rejects.toThrow(
                 new CustomError(BLOG_RESPONSE.ERRORS.EXISTING_CATEGORIES, 400)
+            );
+        });
+    });
+
+    describe('getBlogById', () => {  
+        test('should get a blog by ID and return a BlogEntity', async () => {  
+            const id = 1;
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(newBlogPrisma);
+
+            const result = await blogDatasource.getBlogById(id);
+
+            expect(result).toBeInstanceOf(BlogEntity);
+            expect(prisma.blog.findFirst).toHaveBeenCalledWith({
+                where: {id, deletedAt: null},
+                include: {
+                    categories: true, 
+                    author: true,
+                    comments: true,
+                    likes: true
+                }
+            });
+        });
+        test('should throw an error if the blog does not exist', async () => {  
+            const id = 1;
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(null);
+
+            await expect(blogDatasource.getBlogById(id)).rejects.toThrow(
+                new CustomError(`Blog with id ${id} does not exist`)
             );
         });
     });

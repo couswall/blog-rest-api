@@ -9,6 +9,7 @@ describe('blog.repository.impl tests', () => {
     
     const mockBlogDatasource: jest.Mocked<BlogDatasource> = {
         create: jest.fn(),
+        getBlogById: jest.fn(),
     };
     const mockBlogEntity = BlogEntity.fromObject(blogObj);
     
@@ -31,6 +32,24 @@ describe('blog.repository.impl tests', () => {
             mockBlogDatasource.create.mockResolvedValue(mockBlogEntity);
 
             const result = await blogRepository.create(dto!);
+
+            expect(result).toBeInstanceOf(BlogEntity);
+        });
+    });
+
+    describe('getBlogById()', () => {  
+        test('should call getBlogById method from Blogdatasource', async () => {  
+            mockBlogDatasource.getBlogById.mockResolvedValue(mockBlogEntity);
+
+            await blogRepository.getBlogById(1);
+
+            expect(mockBlogDatasource.getBlogById).toHaveBeenCalled();
+            expect(mockBlogDatasource.getBlogById).toHaveBeenCalledWith(1);
+        });
+        test('should return a BlogEntity instance', async () => {  
+            mockBlogDatasource.getBlogById.mockResolvedValue(mockBlogEntity);
+
+            const result = await blogRepository.getBlogById(1);
 
             expect(result).toBeInstanceOf(BlogEntity);
         });

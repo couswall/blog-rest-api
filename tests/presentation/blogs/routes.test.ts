@@ -60,7 +60,7 @@ describe('blog routes tests', () => {
                 .post(`/api/blogs/${user.id}`)
                 .set('token', 'any-token')
                 .send({...newBlog, categoriesIds: categories.map(category => category.id)})
-                // .expect(201)
+                .expect(201)
                 
             expect(body).toEqual({
                 success: true,
@@ -376,6 +376,81 @@ describe('blog routes tests', () => {
                 ]));
             });
         });
+    });
 
+    describe('/:id Get Blog by ID endpoint', () => {  
+        test('should return a 200 status code and a blog', async () => {
+            const user = await prisma.user.create({data: mockUser});
+            await prisma.category.createMany({data: mockCategories});
+            const categories = await prisma.category.findMany(
+                {where: {deletedAt: null},
+                select: {id: true}
+            });
+            
+            const existingBlog = await prisma.blog.create({
+                data: {
+                    title: newBlog.title,
+                    content: newBlog.content,
+                    authorId: user.id,
+                    categories: {
+                        connect: categories
+                    }
+                }
+            });
+
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .get(`/api/blogs/${existingBlog.id}`)
+                .set('token', 'any-token')
+                .expect(200);
+            
+            expect(body).toEqual({
+                success: true,
+                message: BLOG_RESPONSE.SUCCESS.GET_BLOG_BY_ID,
+                data: {blog: expect.any(Object)}
+            });
+        });
+        test('should throw a 400 error when blog does not exist', async () => {
+            const id = 1;
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .get(`/api/blogs/${id}`)
+                .set('token', 'any-token')
+                .expect(400);
+            
+            expect(body.success).toBeFalsy();
+            expect(body.error.message).toBe(`Blog with id ${id} does not exist`);
+        });
+
+        describe('Token validation', () => {  
+            test('should throw a 401 error if token is not provided', async () => {  
+                const {body} = await request(testServer.app)
+                    .get(`/api/blogs/${15}`)
+                    .send(newBlog)
+                    .expect(401);
+
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: JWT_ADAPTER.ERRORS.NO_TOKEN},
+                });
+            });
+            test('should throw a 401 status code if token is invalid or expired', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockRejectedValue(
+                    new CustomError(JWT_ADAPTER.ERRORS.INVALID_TOKEN, 401)
+                );
+                const {body} = await request(testServer.app)
+                    .get(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send(newBlog)
+                    .expect(401);
+                    
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: JWT_ADAPTER.ERRORS.INVALID_TOKEN},
+                });
+            });
+        });
     });
 });
