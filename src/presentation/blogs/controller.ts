@@ -14,17 +14,6 @@ export class BlogController {
         private readonly blogRepository: BlogRepository,
     ){}
 
-    private handleError = (res: Response, error: unknown) => {
-        if (error instanceof CustomError) {
-            res.status(error.statusCode).json({
-                success: false,
-                error: {message: error.message}
-            });
-            return;
-        }
-        res.status(500).json({error: {message: 'Internal server error'}})
-    }
-
     public getBlogs = (req: Request, res: Response) => {
         res.json({message: 'Get all blogs'});
         return;
@@ -56,7 +45,7 @@ export class BlogController {
                     },
                 }
             }))
-            .catch(error => this.handleError(res, error));
+            .catch(error => CustomError.handleError(res, error));
     };
 
     public createBlog = (req: Request, res: Response) => {
@@ -91,7 +80,7 @@ export class BlogController {
                     }
                 }
             }))
-            .catch(error => this.handleError(res, error));
+            .catch(error =>  CustomError.handleError(res, error));
     };
 
     public updateBlog = (req: Request, res: Response) => {

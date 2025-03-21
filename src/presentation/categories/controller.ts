@@ -10,17 +10,6 @@ export class CategoryController {
         private readonly categoryRepository: CategoryRepository,
     ){};
 
-    private handleError = (res: Response, error: unknown) => {
-        if (error instanceof CustomError) {
-            res.status(error.statusCode).json({
-                success: false,
-                error: {message: error.message}
-            });
-            return;
-        };
-        res.status(500).json({error: {message: 'Internal server error'}});
-    };
-
     public createCategory = (req: Request, res: Response) => {
         const [errorMessage, dto] = CreateCategoryDto.create({...req.body});
 
@@ -42,7 +31,7 @@ export class CategoryController {
                     name: category.name,
                 }
             }))
-            .catch(error => this.handleError(res, error))
+            .catch(error => CustomError.handleError(res, error))
     };
 
     public getAllCategories = (req: Request, res: Response) => {
@@ -55,6 +44,6 @@ export class CategoryController {
                     name: category.name
                 }))
             }))
-            .catch(error => this.handleError(res, error));
+            .catch(error => CustomError.handleError(res, error));
     };
 }
