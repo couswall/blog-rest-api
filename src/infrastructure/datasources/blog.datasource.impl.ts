@@ -60,4 +60,15 @@ export class BlogDatasourceImpl implements BlogDatasource {
             categories: existingBlog.categories.map(category => CategoryEntity.fromObject(category)),
         })
     };
+
+    async deleteBlog(id: number): Promise<BlogEntity> {
+        const deletedBlog = await this.getBlogById(id);
+
+        await prisma.blog.update({
+            data: {deletedAt: new Date()},
+            where: {id, deletedAt: null},
+        });
+
+        return deletedBlog;
+    }
 }

@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
 import { CreateBlogDto } from "@/domain/dtos/blogs";
 import { BlogRepository } from "@/domain/repositories/blog.repository";
-import { CreateBlog, GetByIdBlog } from "@/domain/use-cases/blog";
+import { CreateBlog, DeleteBlog, GetByIdBlog } from "@/domain/use-cases/blog";
 import { CustomError } from '@/domain/errors/custom.error';
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 import { ID_ERROR_MSG } from "@/domain/constants/dto/user.constants";
-import { BlogEntity } from "@/domain/entities";
 
 
 export class BlogController {
@@ -89,8 +88,26 @@ export class BlogController {
     };
 
     public deleteBlog = (req: Request, res: Response) => {
-        res.json({message: 'Delete blog'});
-        return;
+        const blogId = +req.params.id;
+
+        if (!blogId || isNaN(blogId)) {
+            res.status(400).json({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+            return;
+        }
+
+        new DeleteBlog(this.blogRepository)
+            .execute(blogId)
+            .then(deletedBlog => res.status(200).json({
+                success: true,
+                message: `Blog with id ${deletedBlog.id} deleted successfully`,
+                data: {
+                    blog: {id: deletedBlog.id, title: deletedBlog.title}
+                }
+            }))
+            .catch(error => CustomError.handleError(res, error))
     }
 
 

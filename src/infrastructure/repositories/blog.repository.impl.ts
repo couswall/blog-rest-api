@@ -16,4 +16,8 @@ export class BlogRepositoryImpl implements BlogRepository{
     getBlogById(id: number): Promise<BlogEntity> {
         return this.datasource.getBlogById(id);
     }
+
+    deleteBlog(id: number): Promise<BlogEntity> {
+        return this.datasource.deleteBlog(id);
+    }
 }
