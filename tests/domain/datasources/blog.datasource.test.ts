@@ -15,6 +15,9 @@ describe('blog.datasource tests', () => {
         async create(createBlogDto: CreateBlogDto): Promise<BlogEntity> {
             return mockBlogEntity;
         }
+        async deleteBlog(id: number): Promise<BlogEntity> {
+            return mockBlogEntity;
+        }
     };
 
     const mockBlogDatasource = new MockBlogDatasource();
@@ -35,6 +38,11 @@ describe('blog.datasource tests', () => {
 
     test('getBlogById() should return a BlogEntity instance', async () => {  
         const result = await mockBlogDatasource.getBlogById(1);
+        expect(result).toBeInstanceOf(BlogEntity);
+    });
+
+    test('deleteBlog() should return a BlogEntity instance', async () => {  
+        const result = mockBlogDatasource.deleteBlog(1);
         expect(result).toBeInstanceOf(BlogEntity);
     });
 });

@@ -15,6 +15,9 @@ describe('blog.repository test', () => {
         async create(createBlogDto: CreateBlogDto): Promise<BlogEntity> {
             return blogEntity;
         }
+        async deleteBlog(id: number): Promise<BlogEntity> {
+            return blogEntity;
+        }
     };
 
     const blogRepository = new MockBlogRepository();
@@ -34,6 +37,11 @@ describe('blog.repository test', () => {
     });
     test('getBlogById() should return a BlogEntity instance', async () => {  
         const result = await blogRepository.getBlogById(1);
+        expect(result).toBeInstanceOf(BlogEntity);
+    });
+
+    test('deleteBlog() should return a BlogEntity instance', async () => {  
+        const result = await blogRepository.deleteBlog(1);
         expect(result).toBeInstanceOf(BlogEntity);
     });
 });
