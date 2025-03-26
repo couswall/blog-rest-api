@@ -11,7 +11,8 @@ describe('create-blog use case tests', () => {
 
     const mockBlogRepository: jest.Mocked<BlogRepository> = {
         create: jest.fn(),
-        getBlogById: jest.fn()
+        getBlogById: jest.fn(),
+        deleteBlog: jest.fn(),
     };
 
     beforeEach(() => {

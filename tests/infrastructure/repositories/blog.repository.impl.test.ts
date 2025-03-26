@@ -10,6 +10,7 @@ describe('blog.repository.impl tests', () => {
     const mockBlogDatasource: jest.Mocked<BlogDatasource> = {
         create: jest.fn(),
         getBlogById: jest.fn(),
+        deleteBlog: jest.fn(),
     };
     const mockBlogEntity = BlogEntity.fromObject(blogObj);
     
@@ -50,6 +51,24 @@ describe('blog.repository.impl tests', () => {
             mockBlogDatasource.getBlogById.mockResolvedValue(mockBlogEntity);
 
             const result = await blogRepository.getBlogById(1);
+
+            expect(result).toBeInstanceOf(BlogEntity);
+        });
+    });
+
+    describe('deleteBlog()', () => {  
+        test('should call deleteBlog method from BlogDatasource', async () => {  
+            mockBlogDatasource.deleteBlog.mockResolvedValue(mockBlogEntity);
+
+            await blogRepository.deleteBlog(1);
+
+            expect(mockBlogDatasource.deleteBlog).toHaveBeenCalled();
+            expect(mockBlogDatasource.deleteBlog).toHaveBeenCalledWith(1);
+        });
+        test('should return a BlogEntity instance', async () => {  
+            mockBlogDatasource.deleteBlog.mockResolvedValue(mockBlogEntity);
+
+            const result = await blogRepository.deleteBlog(1);
 
             expect(result).toBeInstanceOf(BlogEntity);
         });

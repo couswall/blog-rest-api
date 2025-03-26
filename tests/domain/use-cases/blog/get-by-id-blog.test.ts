@@ -9,7 +9,8 @@ describe('get-by-id-blog tests', () => {
     
     const mockBlogRepository: jest.Mocked<BlogRepository> = {
         create: jest.fn(),
-        getBlogById: jest.fn()
+        getBlogById: jest.fn(),
+        deleteBlog: jest.fn(),
     };
 
     beforeEach(() => {

@@ -42,7 +42,7 @@ describe('blog.datasource tests', () => {
     });
 
     test('deleteBlog() should return a BlogEntity instance', async () => {  
-        const result = mockBlogDatasource.deleteBlog(1);
+        const result = await mockBlogDatasource.deleteBlog(1);
         expect(result).toBeInstanceOf(BlogEntity);
     });
 });
