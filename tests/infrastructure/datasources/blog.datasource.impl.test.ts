@@ -18,6 +18,7 @@ jest.mock('@/data/postgres', () => ({
         blog: {
             create: jest.fn(),
             findFirst: jest.fn(),
+            update: jest.fn(),
         }
     }
 }));
@@ -103,6 +104,34 @@ describe('blog.datasource.impl test', () => {
             (prisma.blog.findFirst as jest.Mock).mockResolvedValue(null);
 
             await expect(blogDatasource.getBlogById(id)).rejects.toThrow(
+                new CustomError(`Blog with id ${id} does not exist`)
+            );
+        });
+    });
+
+    describe('deleteBlog()', () => {  
+        test('should update deleteAt status and return a blogEntity', async () => {  
+            const id = 1;
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(newBlogPrisma);
+
+            (prisma.blog.update as jest.Mock).mockResolvedValue({
+                ...newBlogPrisma,
+                deletedAt: new Date()
+            });
+
+            const result = await blogDatasource.deleteBlog(id);
+
+            expect(result).toBeInstanceOf(BlogEntity);
+            expect(prisma.blog.update).toHaveBeenCalledWith({
+                data: {deletedAt: expect.any(Date)},
+                where: {id, deletedAt: null},
+            });
+        });
+        test('should throw an error if blog does not exist', async () => {  
+            const id = 1;
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(null);
+
+            await expect(blogDatasource.deleteBlog(id)).rejects.toThrow(
                 new CustomError(`Blog with id ${id} does not exist`)
             );
         });
