@@ -13,6 +13,7 @@ jest.mock('@/data/postgres', () => ({
         blog: {
             create: jest.fn(),
             findFirst: jest.fn(),
+            update: jest.fn(),
         },
         user: {
             findFirst: jest.fn(),
@@ -184,6 +185,70 @@ describe('BlogController tests', () => {
             expect(mockResponse.json).toHaveBeenCalledWith({
                 success: false,
                 error: {message: ID_ERROR_MSG}
+            });
+        });
+    });
+
+    describe('deleteBlog', () => {  
+        test('should return a 200 status and deleting blog information', async () => {  
+            mockRequest.params = {id: '1'};
+
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(newBlogPrisma);
+            (prisma.blog.update as jest.Mock).mockResolvedValue({
+                ...newBlogPrisma,
+                deletedAt: new Date()
+            });
+
+            await new Promise<void>((resolve) => {
+                blogController.deleteBlog(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                message: `Blog with id ${newBlogPrisma.id} deleted successfully`,
+                data: {
+                    blog: {id: newBlogPrisma.id, title: newBlogPrisma.title}
+                }
+            });
+        });
+        test('should throw a 400 error status if ID is not provided', async () => {  
+            mockRequest.params = {};
+
+            await blogController.deleteBlog(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+        });
+        test('should throw a 400 error status if ID is not a number', async () => {  
+            mockRequest.params = {id: 'abc'};
+
+            await blogController.deleteBlog(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+        });
+        test('should throw a 400 error status if blog does not exist', async () => {  
+            mockRequest.params = {id: String(newBlogPrisma.id)};
+
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(null);
+
+            await new Promise<void>((resolve) => {
+                blogController.deleteBlog(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: `Blog with id ${newBlogPrisma.id} does not exist`},
             });
         });
     });
