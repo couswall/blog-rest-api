@@ -6,6 +6,7 @@ import { BLOG_RESPONSE } from '@/infrastructure/constants/blog.constants';
 import { JWT_ADAPTER } from '@/config/constants';
 import { CustomError } from '@/domain/errors/custom.error';
 import { CREATE_BLOG, ERROR_VALIDATION_MSG } from '@/domain/constants/dto/blog.constants';
+import { ID_ERROR_MSG } from '@/domain/constants/dto/user.constants';
 
 jest.mock('@/config/jwt.adapter', () => ({
     JwtAdapter: {
@@ -443,7 +444,112 @@ describe('blog routes tests', () => {
                 const {body} = await request(testServer.app)
                     .get(`/api/blogs/${15}`)
                     .set('token', 'any-token')
-                    .send(newBlog)
+                    .expect(401);
+                    
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: JWT_ADAPTER.ERRORS.INVALID_TOKEN},
+                });
+            });
+        });
+    });
+
+    // TODO: Delete blog tests
+    describe('/deleteBlog/:id endpoint', () => {  
+        test('should return a 200 status and blog information', async () => {  
+            const user = await prisma.user.create({data: mockUser});
+            await prisma.category.createMany({data: mockCategories});
+            const categories = await prisma.category.findMany(
+                {where: {deletedAt: null},
+                select: {id: true}
+            });
+            
+            const existingBlog = await prisma.blog.create({
+                data: {
+                    title: newBlog.title,
+                    content: newBlog.content,
+                    authorId: user.id,
+                    categories: {
+                        connect: categories
+                    }
+                }
+            });
+
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .put(`/api/blogs/deleteBlog/${existingBlog.id}`)
+                .set('token', 'any-token')
+                .expect(200);
+
+            expect(body).toEqual({
+                success: true,
+                message: `Blog with id ${existingBlog.id} deleted successfully`,
+                data: {
+                    blog: {id: existingBlog.id, title: existingBlog.title}
+                }
+            })
+        });
+        test('should throw a 400 error if blog does not exist', async () => {  
+            const blogId = 1;
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .put(`/api/blogs/deleteBlog/${blogId}`)
+                .set('token', 'any-token')
+                .expect(400);
+
+            expect(body).toEqual({
+                success: false,
+                error: {message: `Blog with id ${blogId} does not exist`}
+            });
+        });
+        test('should throw a 400 error if ID is not sent', async () => {
+            const id = undefined;
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .put(`/api/blogs/deleteBlog/${id}`)
+                .set('token', 'any-token')
+                .expect(400);
+
+            expect(body).toEqual({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+        });
+        test('should throw a 400 error if ID is not a number', async () => {  
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .put(`/api/blogs/deleteBlog/abc`)
+                .set('token', 'any-token')
+                .expect(400);
+
+            expect(body).toEqual({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+        });
+        describe('Token validation', () => {  
+            test('should throw a 401 error if token is not provided', async () => {  
+                
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/deleteBlog/${1}`)
+                    .expect(401);
+
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: JWT_ADAPTER.ERRORS.NO_TOKEN},
+                });
+            });
+            test('should throw a 401 status code if token is invalid or expired', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockRejectedValue(
+                    new CustomError(JWT_ADAPTER.ERRORS.INVALID_TOKEN, 401)
+                );
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/deleteBlog/${1}`)
+                    .set('token', 'any-token')
                     .expect(401);
                     
                 expect(body).toEqual({
