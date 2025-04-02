@@ -454,7 +454,6 @@ describe('blog routes tests', () => {
         });
     });
 
-    // TODO: Delete blog tests
     describe('/deleteBlog/:id endpoint', () => {  
         test('should return a 200 status and blog information', async () => {  
             const user = await prisma.user.create({data: mockUser});
