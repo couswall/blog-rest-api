@@ -1,6 +1,6 @@
 import { prisma } from "@/data/postgres";
 import { BlogDatasource } from "@/domain/datasources/blog.datasource";
-import { CreateBlogDto } from "@/domain/dtos/blogs";
+import { CreateBlogDto, UpdateBlogDto } from "@/domain/dtos/blogs";
 import { BlogEntity, CategoryEntity, CommentEntity, UserEntity } from "@/domain/entities";
 import { CustomError } from "@/domain/errors/custom.error";
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
@@ -60,6 +60,37 @@ export class BlogDatasourceImpl implements BlogDatasource {
             categories: existingBlog.categories.map(category => CategoryEntity.fromObject(category)),
         })
     };
+
+    async updateById(updateBlogDto: UpdateBlogDto): Promise<BlogEntity> {
+        await this.getBlogById(updateBlogDto.id);
+
+        const existingCategories = await prisma.category.findMany({
+            where: {id: {in: updateBlogDto.categoriesIds}}
+        });
+
+        if (existingCategories.length !== updateBlogDto.categoriesIds.length) {
+            throw new CustomError(BLOG_RESPONSE.ERRORS.EXISTING_CATEGORIES, 400);
+        }
+
+        const updatedBlog = await prisma.blog.update({
+            where: {id: updateBlogDto.id},
+            data: {
+                title: updateBlogDto.title,
+                content: updateBlogDto.content,
+                categories: {
+                    set: updateBlogDto.categoriesIds.map(id => ({id})),
+                },
+                updatedAt: new Date(),
+            },
+            include: {categories: true, author: true},
+        });
+
+        return BlogEntity.fromObject({
+            ...updatedBlog,
+            author: UserEntity.fromObject(updatedBlog.author),
+            categories: updatedBlog.categories.map(category => CategoryEntity.fromObject(category)),
+        });
+    }
 
     async deleteBlog(id: number): Promise<BlogEntity> {
         const deletedBlog = await this.getBlogById(id);

@@ -1,5 +1,5 @@
 import { BlogDatasource } from "@/domain/datasources/blog.datasource";
-import { CreateBlogDto } from "@/domain/dtos/blogs";
+import { CreateBlogDto, UpdateBlogDto } from "@/domain/dtos/blogs";
 import { BlogEntity } from "@/domain/entities";
 import { BlogRepository } from "@/domain/repositories/blog.repository";
 
@@ -15,6 +15,10 @@ export class BlogRepositoryImpl implements BlogRepository{
 
     getBlogById(id: number): Promise<BlogEntity> {
         return this.datasource.getBlogById(id);
+    }
+
+    updateById(updateBlogDto: UpdateBlogDto): Promise<BlogEntity> {
+        return this.datasource.updateById(updateBlogDto);    
     }
 
     deleteBlog(id: number): Promise<BlogEntity> {
