@@ -4,6 +4,7 @@ export const BLOG_RESPONSE = {
     },
     SUCCESS: {
         CREATE: 'Blog created successfully',
-        GET_BLOG_BY_ID: 'Got Blog by ID successfully'
+        GET_BLOG_BY_ID: 'Got Blog by ID successfully',
+        UPDATE_BLOG: 'Blog updated successfully',
     }
 };
