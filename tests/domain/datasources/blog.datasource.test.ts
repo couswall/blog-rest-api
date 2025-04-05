@@ -1,5 +1,5 @@
 import { BlogDatasource } from "@/domain/datasources/blog.datasource";
-import { CreateBlogDto } from "@/domain/dtos";
+import { CreateBlogDto, UpdateBlogDto } from "@/domain/dtos";
 import { BlogEntity } from "@/domain/entities";
 import { blogObj, newBlogRequest } from "tests/fixtures";
 
@@ -15,6 +15,9 @@ describe('blog.datasource tests', () => {
         async create(createBlogDto: CreateBlogDto): Promise<BlogEntity> {
             return mockBlogEntity;
         }
+        async updateById(updateBlogDto: UpdateBlogDto): Promise<BlogEntity> {
+            return mockBlogEntity;
+        }
         async deleteBlog(id: number): Promise<BlogEntity> {
             return mockBlogEntity;
         }
@@ -26,6 +29,8 @@ describe('blog.datasource tests', () => {
         expect(mockBlogDatasource).toBeInstanceOf(MockBlogDatasource);
         expect(typeof mockBlogDatasource.create).toBe('function');
         expect(typeof mockBlogDatasource.getBlogById).toBe('function');
+        expect(typeof mockBlogDatasource.updateById).toBe('function');
+        expect(typeof mockBlogDatasource.deleteBlog).toBe('function');
     });
 
     test('create() should return a BlogEntity instance', async () => {  
@@ -40,6 +45,14 @@ describe('blog.datasource tests', () => {
         const result = await mockBlogDatasource.getBlogById(1);
         expect(result).toBeInstanceOf(BlogEntity);
     });
+
+    test('updateBlogById() should return a BlogEntity instance', async() => { 
+        const [,,dto] = UpdateBlogDto.create({...newBlogRequest, id: 1});
+
+        const result = await mockBlogDatasource.updateById(dto!);
+
+        expect(result).toBeInstanceOf(BlogEntity);
+     });
 
     test('deleteBlog() should return a BlogEntity instance', async () => {  
         const result = await mockBlogDatasource.deleteBlog(1);

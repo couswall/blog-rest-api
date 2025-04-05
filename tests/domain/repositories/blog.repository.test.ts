@@ -1,4 +1,4 @@
-import { CreateBlogDto } from "@/domain/dtos";
+import { CreateBlogDto, UpdateBlogDto } from "@/domain/dtos";
 import { BlogEntity } from "@/domain/entities";
 import { BlogRepository } from "@/domain/repositories/blog.repository";
 import { blogObj, newBlogRequest } from "tests/fixtures";
@@ -15,6 +15,9 @@ describe('blog.repository test', () => {
         async create(createBlogDto: CreateBlogDto): Promise<BlogEntity> {
             return blogEntity;
         }
+        async updateById(updateBlogDto: UpdateBlogDto): Promise<BlogEntity> {
+            return blogEntity;
+        }
         async deleteBlog(id: number): Promise<BlogEntity> {
             return blogEntity;
         }
@@ -26,6 +29,8 @@ describe('blog.repository test', () => {
         expect(blogRepository).toBeInstanceOf(MockBlogRepository);
         expect(typeof blogRepository.create).toBe('function');
         expect(typeof blogRepository.getBlogById).toBe('function');
+        expect(typeof blogRepository.updateById).toBe('function');
+        expect(typeof blogRepository.deleteBlog).toBe('function');
     });
 
     test('create() should return an instance of BlogEntity', async () => {  
@@ -37,6 +42,14 @@ describe('blog.repository test', () => {
     });
     test('getBlogById() should return a BlogEntity instance', async () => {  
         const result = await blogRepository.getBlogById(1);
+        expect(result).toBeInstanceOf(BlogEntity);
+    });
+
+    test('updateBlogById() should return a BlogEntity instance', async() => { 
+        const [,,dto] = UpdateBlogDto.create({...newBlogRequest, id: 1});
+
+        const result = await blogRepository.updateById(dto!);
+
         expect(result).toBeInstanceOf(BlogEntity);
     });
 
