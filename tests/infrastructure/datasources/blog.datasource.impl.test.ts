@@ -1,10 +1,10 @@
 import { prisma } from "@/data/postgres";
-import { CreateBlogDto } from "@/domain/dtos";
+import { CreateBlogDto, UpdateBlogDto } from "@/domain/dtos";
 import { BlogEntity } from "@/domain/entities";
 import { CustomError } from "@/domain/errors/custom.error";
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 import { BlogDatasourceImpl } from "@/infrastructure/datasources/blog.datasource.impl";
-import { existingCategories, newBlogPrisma, newBlogRequest, userObjPrisma } from "tests/fixtures";
+import { existingCategories, newBlogPrisma, newBlogRequest, updatedBlogReq, userObjPrisma } from "tests/fixtures";
 
 
 jest.mock('@/data/postgres', () => ({
@@ -105,6 +105,58 @@ describe('blog.datasource.impl test', () => {
 
             await expect(blogDatasource.getBlogById(id)).rejects.toThrow(
                 new CustomError(`Blog with id ${id} does not exist`)
+            );
+        });
+    });
+
+    
+    describe('updateBlog()', () => {
+        test('should update a blog and return a BlogEntity', async () => {
+            const updatedBlogDto = {...updatedBlogReq, id: 1};
+            const [,,dto] = UpdateBlogDto.create(updatedBlogDto);
+
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(newBlogPrisma);
+            (prisma.category.findMany as jest.Mock).mockResolvedValue(updatedBlogDto.categoriesIds);
+            (prisma.blog.update as jest.Mock).mockResolvedValue({
+                ...updatedBlogReq,
+                ...newBlogPrisma,
+            });
+
+            const result = await blogDatasource.updateById(dto!);
+
+            expect(result).toBeInstanceOf(BlogEntity);
+            expect(prisma.blog.update).toHaveBeenCalledWith({
+                where: {id: dto!.id},
+                data: {
+                    title: dto!.title,
+                    content: dto!.content,
+                    categories: {
+                        set: dto!.categoriesIds.map(id => ({id})),
+                    },
+                    updatedAt: new Date(),
+                },
+                include: {categories: true, author: true},
+            });
+        });
+        test('should throw an 400 error if blog with provided ID does not exist', async () => {
+            const updatedBlogDto = {...updatedBlogReq, id: 1};
+            const [,,dto] = UpdateBlogDto.create(updatedBlogDto);
+
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(null);
+
+            await expect(blogDatasource.updateById(dto!)).rejects.toThrow(
+                new CustomError(`Blog with id ${dto!.id} does not exist`)
+            );
+        });
+        test('should throw a 400 error when a category id does not exist in existing categories', async () => {
+            const updatedBlogDto = {...updatedBlogReq, id: 1, categoriesIds: [100, 101, 200]};
+            const [,,dto] = UpdateBlogDto.create(updatedBlogDto);
+
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(newBlogPrisma);
+            (prisma.category.findMany as jest.Mock).mockResolvedValue(existingCategories);
+
+            await expect(blogDatasource.updateById(dto!)).rejects.toThrow(
+                new CustomError(BLOG_RESPONSE.ERRORS.EXISTING_CATEGORIES, 400)
             );
         });
     });
