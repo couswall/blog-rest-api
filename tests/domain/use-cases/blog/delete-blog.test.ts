@@ -10,6 +10,7 @@ describe('delete-blog use case unit test', () => {
     const mockBlogRepository: jest.Mocked<BlogRepository> = {
         create: jest.fn(),
         getBlogById: jest.fn(),
+        updateById: jest.fn(),
         deleteBlog: jest.fn(),
     };
 

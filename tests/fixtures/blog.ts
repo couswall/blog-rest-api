@@ -25,3 +25,9 @@ export const blogObj = {
     author: UserEntity.fromObject(userObjPrisma),
     categories: existingCategories.map(category => CategoryEntity.fromObject(category))
 };
+
+export const updatedBlogReq = {
+    title: 'Updated Blog!!!!',
+    content: 'This is an updated blog content with more than 15 characters long, bla bla bla bla bla',
+    categoriesIds: [1,2],
+};
