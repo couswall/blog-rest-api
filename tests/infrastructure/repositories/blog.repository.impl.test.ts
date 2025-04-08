@@ -1,8 +1,8 @@
 import { BlogDatasource } from "@/domain/datasources/blog.datasource";
-import { CreateBlogDto } from "@/domain/dtos";
+import { CreateBlogDto, UpdateBlogDto } from "@/domain/dtos";
 import { BlogEntity } from "@/domain/entities";
 import { BlogRepositoryImpl } from "@/infrastructure/repositories/blog.repository.impl";
-import { blogObj, newBlogRequest } from "tests/fixtures";
+import { blogObj, newBlogRequest, updatedBlogReq } from "tests/fixtures";
 
 
 describe('blog.repository.impl tests', () => {  
@@ -10,6 +10,7 @@ describe('blog.repository.impl tests', () => {
     const mockBlogDatasource: jest.Mocked<BlogDatasource> = {
         create: jest.fn(),
         getBlogById: jest.fn(),
+        updateById: jest.fn(),
         deleteBlog: jest.fn(),
     };
     const mockBlogEntity = BlogEntity.fromObject(blogObj);
@@ -51,6 +52,28 @@ describe('blog.repository.impl tests', () => {
             mockBlogDatasource.getBlogById.mockResolvedValue(mockBlogEntity);
 
             const result = await blogRepository.getBlogById(1);
+
+            expect(result).toBeInstanceOf(BlogEntity);
+        });
+    });
+
+    describe('updateBlog()', () => {  
+        test('should call updateBlog method from Blogdatasource', async () => {  
+            const [,,dto] = UpdateBlogDto.create({...updatedBlogReq, id: 1});
+            
+            mockBlogDatasource.updateById.mockResolvedValue(mockBlogEntity);
+            
+            await mockBlogDatasource.updateById(dto!);
+
+            expect(mockBlogDatasource.updateById).toHaveBeenCalled();
+            expect(mockBlogDatasource.updateById).toHaveBeenCalledWith(dto!);
+        });
+        test('should return a BlogEntity instance', async () => {  
+            const [,,dto] = UpdateBlogDto.create({...updatedBlogReq, id: 1});
+            
+            mockBlogDatasource.updateById.mockResolvedValue(mockBlogEntity);
+            
+            const result = await mockBlogDatasource.updateById(dto!);
 
             expect(result).toBeInstanceOf(BlogEntity);
         });
