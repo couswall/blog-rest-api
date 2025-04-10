@@ -102,15 +102,17 @@ export class BlogController {
             .then(blog => res.status(200).json({
                 success: true,
                 message: BLOG_RESPONSE.SUCCESS.UPDATE_BLOG,
-                blog: {
-                    id: blog.id,
-                    title: blog.title,
-                    content: blog.content,
-                    categories: blog.categories.map(category => ({
-                        id: category.id,
-                        name: category.name,
-                    })),
-                    updatedAt: blog.updatedAt,
+                data: {
+                    blog: {
+                        id: blog.id,
+                        title: blog.title,
+                        content: blog.content,
+                        categories: blog.categories.map(category => ({
+                            id: category.id,
+                            name: category.name,
+                        })),
+                        updatedAt: blog.updatedAt,
+                    }
                 }
             }))
             .catch(error => CustomError.handleError(res, error))

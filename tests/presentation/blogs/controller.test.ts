@@ -3,7 +3,7 @@ import { BlogDatasourceImpl } from "@/infrastructure/datasources/blog.datasource
 import { BlogRepositoryImpl } from "@/infrastructure/repositories/blog.repository.impl";
 import { BlogController } from "@/presentation/blogs/controller";
 import { prisma } from "@/data/postgres";
-import { existingCategories, newBlogPrisma, newBlogRequest, userObj } from "tests/fixtures";
+import { existingCategories, newBlogPrisma, newBlogRequest, updatedBlogReq, userObj } from "tests/fixtures";
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 import { CREATE_BLOG } from "@/domain/constants/dto/blog.constants";
 import { ID_ERROR_MSG } from "@/domain/constants/dto/user.constants";
@@ -181,6 +181,78 @@ describe('BlogController tests', () => {
 
             await blogController.getBlogById(mockRequest as Request, mockResponse as Response);
             
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+        });
+    });
+
+    describe('updateBlog', () => {  
+        test('should return a 200 status and updating blog data', async () => {  
+            mockRequest.params = {id: '1'};
+            mockRequest.body = {...updatedBlogReq};
+
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(newBlogPrisma);
+            (prisma.category.findMany as jest.Mock).mockResolvedValue(updatedBlogReq.categoriesIds);
+            (prisma.blog.update as jest.Mock).mockResolvedValue({
+                ...newBlogPrisma,
+                ...updatedBlogReq,
+            });
+
+            await new Promise<void>((resolve) => {
+                blogController.updateBlog(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                message: BLOG_RESPONSE.SUCCESS.UPDATE_BLOG,
+                data: {
+                    blog: {
+                        id: 1,
+                        title: updatedBlogReq.title,
+                        content: updatedBlogReq.content,
+                        categories: expect.any(Array),
+                        updatedAt: expect.any(Date),
+                    }
+                }
+            });
+        });
+        test('should throw a 400 error status if blog does not exist', async () => {  
+            mockRequest.params = {id: String(newBlogPrisma.id)};
+
+            (prisma.blog.findFirst as jest.Mock).mockResolvedValue(null);
+
+            await new Promise<void>((resolve) => {
+                blogController.updateBlog(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: `Blog with id ${newBlogPrisma.id} does not exist`},
+            });
+        });
+        test('should throw a 400 error status if ID is not provided', async () => {  
+            mockRequest.params = {};
+
+            await blogController.updateBlog(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: ID_ERROR_MSG}
+            });
+        });
+        test('should throw a 400 error status if ID is not a number', async () => {  
+            mockRequest.params = {id: 'abc'};
+
+            await blogController.updateBlog(mockRequest as Request, mockResponse as Response);
+
             expect(mockResponse.status).toHaveBeenCalledWith(400);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 success: false,
