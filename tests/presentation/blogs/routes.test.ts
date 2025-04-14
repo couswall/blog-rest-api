@@ -569,6 +569,227 @@ describe('blog routes tests', () => {
                 });
             });
         });
+        describe('Title validation', () => { 
+            test('should throw a 400 error if Title is not sent', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, title: undefined})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.TITLE, message: CREATE_BLOG.ERRORS.TITLE.MANDATORY}
+                ]));
+            });
+            test('should throw a 400 error if Title is not a string', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, title: 12345})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.TITLE, message: CREATE_BLOG.ERRORS.TITLE.STRING}
+                ]));
+            });
+            test('should throw a 400 error if Title contains only blank spaces', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, title: ' '.repeat(10)})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.TITLE, message: CREATE_BLOG.ERRORS.TITLE.BLANK_SPACES}
+                ]));
+            });
+            test('should throw a 400 error if Title length is less than 3 characters', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, title: 'ab'})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.TITLE, message: CREATE_BLOG.ERRORS.TITLE.MIN_LENGTH}
+                ]));
+            });
+            test('should throw a 400 error if Title length is more than 150 characters', async () => {  
+                const { body } = await request(testServer.app)
+                  .put(`/api/blogs/${15}`)
+                  .set("token", "any-token")
+                  .send({
+                    ...newBlog,
+                    title: "This is a text with more than one hundred fifty characters long.".repeat(200),
+                  })
+                  .expect(400);
+            
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.TITLE, message: CREATE_BLOG.ERRORS.TITLE.MAX_LENGTH}
+                ]));
+            });
+        });
+
+        describe('Content validation', () => {  
+            test('should throw a 400 error if Content is not sent', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, content: undefined})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.MANDATORY}
+                ]));
+            });
+            test('should throw a 400 error if Content is an empty string', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, content: ''})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.MANDATORY}
+                ]));
+            });
+            test('should throw a 400 error if Content is not a string', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, content: 1234})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.STRING}
+                ]));
+            });
+            test('should throw a 400 error if Content length is less than 5 characters', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, content: 'abc'})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.MIN_LENGTH}
+                ]));
+            });
+            test('should throw a 400 error if Content length is more than 500 characters', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, content: 'This a long text'.repeat(501)})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.MAX_LENGTH}
+                ]));
+            });
+            test('should throw a 400 error if Content contains only blank spaces', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, content: ' '.repeat(20)})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CONTENT, message: CREATE_BLOG.ERRORS.CONTENT.BLANK_SPACES}
+                ]));
+            });
+        });
+
+        describe('Categories Id validation', () => {  
+            test('should throw a 400 error if categoriedIds is not sent', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({title: newBlog.title, content: newBlog.content})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CATEGORIES, message: CREATE_BLOG.ERRORS.CATEGORIES.MANDATORY}
+                ]));
+            });
+            test('should throw a 400 error if categoriedIds is not an array', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, categoriesIds: 1234})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CATEGORIES, message: CREATE_BLOG.ERRORS.CATEGORIES.ARRAY}
+                ]));
+            });
+            test('should throw a 400 error if categoriedIds is an empty array', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, categoriesIds: []})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CATEGORIES, message: CREATE_BLOG.ERRORS.CATEGORIES.EMPTY}
+                ]));
+            });
+            test('should throw a 400 error if categoriedIds is an id is not a number', async () => {  
+                (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+                const {body} = await request(testServer.app)
+                    .put(`/api/blogs/${15}`)
+                    .set('token', 'any-token')
+                    .send({...newBlog, categoriesIds: ['abc', false, null]})
+                    .expect(400);
+                
+                expect(body.success).toBeFalsy();
+                expect(body.error.message).toBe(ERROR_VALIDATION_MSG);
+                expect(body.error.errors).toEqual(expect.arrayContaining([
+                    {field: CREATE_BLOG.FIELDS.CATEGORIES, message: CREATE_BLOG.ERRORS.CATEGORIES.NUMBER}
+                ]));
+            });
+        });
+
     })
 
     describe('/deleteBlog/:id endpoint', () => {  
