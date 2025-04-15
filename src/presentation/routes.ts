@@ -2,6 +2,7 @@ import { Router } from "express";
 import { BlogRoutes } from "@presentation/blogs/routes";
 import { UserRoutes } from "@presentation/users/routes";
 import { CategoryRoutes } from "@presentation/categories/routes";
+import { CommentRoutes } from "@presentation/comments/routes";
 
 export class AppRoutes {
 
@@ -12,6 +13,7 @@ export class AppRoutes {
         router.use('/api/users', UserRoutes.routes);
         router.use('/api/blogs', BlogRoutes.routes);
         router.use('/api/categories', CategoryRoutes.routes);
+        router.use('/api/comments', CommentRoutes.routes);
 
         return router;
     }
