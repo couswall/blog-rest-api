@@ -8,7 +8,7 @@ export class CommentRoutes {
         const router = Router();
         const commentController = new CommentController();
 
-        router.post('/', validateJWT, commentController.createComment);
+        router.post('/:blogId', validateJWT, commentController.createComment);
 
         return router;
     }
