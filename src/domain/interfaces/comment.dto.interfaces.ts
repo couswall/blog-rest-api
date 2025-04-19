@@ -1,4 +1,5 @@
 export interface ICommentBase{
+    authorId: number;
     blogId: number;
-    comment: string;
+    content: string;
 }

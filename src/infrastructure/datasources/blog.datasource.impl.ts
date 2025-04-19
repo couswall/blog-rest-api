@@ -1,7 +1,7 @@
 import { prisma } from "@/data/postgres";
 import { BlogDatasource } from "@/domain/datasources/blog.datasource";
 import { CreateBlogDto, UpdateBlogDto } from "@/domain/dtos/blogs";
-import { BlogEntity, CategoryEntity, CommentEntity, UserEntity } from "@/domain/entities";
+import { BlogEntity, CategoryEntity, UserEntity } from "@/domain/entities";
 import { CustomError } from "@/domain/errors/custom.error";
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 
