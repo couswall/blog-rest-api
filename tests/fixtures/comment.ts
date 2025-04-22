@@ -10,3 +10,9 @@ export const commentObj = {
 };
 
 export const commentEntity = CommentEntity.fromObject(commentObj);
+
+export const commentDtoObj = {
+    authorId: 1,
+    blogId: 1,
+    content: 'DTO comment test',
+};
