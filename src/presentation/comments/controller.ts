@@ -24,7 +24,7 @@ export class CommentController {
 
         new CreateComment(this.commentRepository)
             .execute(dto!)
-            .then(comment => res.status(200).json({
+            .then(comment => res.status(201).json({
                 success: true,
                 message: COMMENT_RESPONSE.SUCCESS.CREATE,
                 data: {

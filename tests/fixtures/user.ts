@@ -10,3 +10,11 @@ export const userObjPrisma  = {
     ...userObj,
     id: 1,
 };
+
+export const verifyToken = {id: 1, username: 'Test_User'};
+
+export const mockUser = {
+    username: 'test_user',
+    email: 'user@google.com',
+    password: 'Password1234##',
+};
