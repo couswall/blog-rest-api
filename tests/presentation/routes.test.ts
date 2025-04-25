@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { testServer } from "tests/test-server";
 import { JwtAdapter } from '@/config/jwt.adapter';
+import { verifyToken } from 'tests/fixtures';
 
 describe('presentation routes', () => { 
     beforeAll(async() => {
@@ -19,11 +20,20 @@ describe('presentation routes', () => {
         expect(response.statusCode).not.toBe(404);
     });
     test('should include /api/categories', async () => {
-        jest.spyOn(JwtAdapter, 'verifyJWT').mockResolvedValue({id: 1, username: 'testing_user'});
+        jest.spyOn(JwtAdapter, 'verifyJWT').mockResolvedValue(verifyToken);
         const response = await request(testServer.app)
             .get('/api/categories')
             .set('token', 'any-token')
             .expect(200);
+        
+        expect(response.statusCode).not.toBe(404);
+    });
+    test('should include /api/comments', async () => {
+        jest.spyOn(JwtAdapter, 'verifyJWT').mockResolvedValue(verifyToken);
+        const response = await request(testServer.app)
+            .post('/api/comments')
+            .set('token', 'any-token')
+            .expect(400);
         
         expect(response.statusCode).not.toBe(404);
     });
