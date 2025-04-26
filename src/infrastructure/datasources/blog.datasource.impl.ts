@@ -47,7 +47,7 @@ export class BlogDatasourceImpl implements BlogDatasource {
             include: {
                 categories: true, 
                 author: true,
-                comments: true,
+                comments: {where: {deletedAt: null}},
                 likes: true
             }
         });

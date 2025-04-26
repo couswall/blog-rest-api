@@ -13,6 +13,7 @@ export class CommentRoutes {
         const commentController = new CommentController(commentRepository);
         
         router.post('/', validateJWT, commentController.createComment);
+        router.put('/deleteComment/:commentId', validateJWT, commentController.deleteComment);
 
         return router;
     }

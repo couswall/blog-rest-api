@@ -12,4 +12,7 @@ export class CommentRepositoryImpl implements CommentRepository{
     create(createCommentDto: CreateCommentDto): Promise<CommentEntity> {
         return this.datasource.create(createCommentDto);
     }
+    deleteById(commentId: number): Promise<CommentEntity> {
+        return this.datasource.deleteById(commentId);
+    }
 }
