@@ -8,6 +8,7 @@ describe('comment.repository.impl tests', () => {
 
     const mockCommentDatasource: jest.Mocked<CommentDatasource> = {
         create: jest.fn(),
+        deleteById: jest.fn(),
     };
 
     const commentRepository = new CommentRepositoryImpl(mockCommentDatasource);
@@ -21,6 +22,17 @@ describe('comment.repository.impl tests', () => {
 
             expect(mockCommentDatasource.create).toHaveBeenCalled();
             expect(mockCommentDatasource.create).toHaveBeenCalledWith(dto!);
+            expect(result).toBeInstanceOf(CommentEntity);
+        });
+    });
+    describe('deleteById()', () => {
+        test('should call deleteById datasource method and return a CommentEntity instance', async () => {  
+            const id = 1;
+            mockCommentDatasource.deleteById.mockResolvedValue(commentEntity);
+            const result = await commentRepository.deleteById(id);
+
+            expect(mockCommentDatasource.deleteById).toHaveBeenCalled();
+            expect(mockCommentDatasource.deleteById).toHaveBeenCalledWith(id);
             expect(result).toBeInstanceOf(CommentEntity);
         });
     });
