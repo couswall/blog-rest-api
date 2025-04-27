@@ -8,6 +8,7 @@ describe('create-comment use case tests', () => {
     
     const mockCommentRepository: jest.Mocked<CommentRepository> = {
         create: jest.fn(),
+        deleteById: jest.fn(),
     };
 
     beforeEach(() => {
