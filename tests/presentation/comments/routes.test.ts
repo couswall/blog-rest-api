@@ -2,7 +2,7 @@ import request from "supertest";
 import { prisma } from "@/data/postgres";
 import { JwtAdapter } from "@/config/jwt.adapter";
 import { testServer } from "tests/test-server";
-import { mockCategories, mockUser, verifyToken, newBlogRequest, commentDtoObj } from "tests/fixtures";
+import { mockCategories, mockUser, verifyToken, newBlogRequest, commentDtoObj, commentObj } from "tests/fixtures";
 import { COMMENT_RESPONSE } from "@/infrastructure/constants/comment.constants";
 import { JWT_ADAPTER } from "@/config/constants";
 import { CustomError } from "@/domain/errors/custom.error";
@@ -234,6 +234,99 @@ describe('comments routes test', () => {
                 
                 expect(body.success).toBeFalsy();
                 expect(body.error.message).toBe(ERRORS.COMMENT.MAX_LENGHT);
+            });
+        });
+    });
+
+    describe('/:commentId Delete Comment endpoint tests', () => {  
+        test('should return a 200 status and deleted comment data', async () => {
+            const user = await prisma.user.create({data: mockUser});
+            await prisma.category.createMany({data: mockCategories});
+            const categories = await prisma.category.findMany({where: {deletedAt: null}});
+            const blog = await prisma.blog.create({
+                data: {
+                    title: newBlogRequest.title,
+                    content: newBlogRequest.content,
+                    authorId: user.id,
+                    categories: {
+                        connect: categories.map(category => ({id: category.id}))
+                    }
+                },
+            });
+            const newComment = await prisma.comment.create({data: {
+                authorId: user.id,
+                blogId: blog.id,
+                content: commentDtoObj.content
+            }});
+
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .put(`/api/comments/deleteComment/${newComment.id}`)
+                .set('token', 'any-token')
+                .expect(200);
+            
+            expect(body).toEqual({
+                success: true,
+                message: COMMENT_RESPONSE.SUCCESS.DELETE,
+                data: {
+                    id: newComment.id,
+                    deletedAt: expect.any(String),
+                    content: newComment.content,
+                }
+            })
+        });
+        test('should thorw a 400 error status if commentId is not a number', async () => {
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .put(`/api/comments/deleteComment/abcd`)
+                .set('token', 'any-token')
+                .expect(400);
+            
+            expect(body).toEqual({
+                success: false,
+                error: {message: COMMENT_RESPONSE.ERRORS.DELETE}
+            });
+        });
+        test('should throw a 400 error status if comment with provided commentId does not exist', async () => {
+            (JwtAdapter.verifyJWT as jest.Mock).mockResolvedValue(verifyToken);
+
+            const {body} = await request(testServer.app)
+                .put(`/api/comments/deleteComment/${commentObj.id}`)
+                .set('token', 'any-token')
+                .expect(400);
+            
+            expect(body).toEqual({
+                success: false,
+                error: {message: `Comment with id ${commentObj.id} does not exist`}
+            });
+        });
+
+        describe('Token validation', () => {
+            test('should throw a 401 error status if token is not sent', async () => {  
+                const {body} = await request(testServer.app)
+                    .put(`/api/comments/deleteComment/${commentObj.id}`)
+                    .expect(401);
+                
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: JWT_ADAPTER.ERRORS.NO_TOKEN},
+                });
+            });
+            test('should throw a 401 error status if token is invalid', async () => {
+                (JwtAdapter.verifyJWT as jest.Mock).mockRejectedValue(
+                    new CustomError(JWT_ADAPTER.ERRORS.INVALID_TOKEN, 401)
+                );
+                const {body} = await request(testServer.app)
+                    .put(`/api/comments/deleteComment/${commentObj.id}`)
+                    .set('token', 'any-token')
+                    .expect(401);
+                
+                expect(body).toEqual({
+                    success: false,
+                    error: {message: JWT_ADAPTER.ERRORS.INVALID_TOKEN},
+                });
             });
         });
     });

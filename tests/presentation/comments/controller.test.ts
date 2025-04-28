@@ -17,6 +17,8 @@ jest.mock('@/data/postgres', () => ({
         },
         comment: {
             create: jest.fn(),
+            findFirst: jest.fn(),
+            update: jest.fn(),
         },
     },
 }));
@@ -25,7 +27,7 @@ describe('CommentController tests', () => {
     const datasource = new CommentDatasourceImpl();
     const commentRepository = new CommentRepositoryImpl(datasource);
     const commentController = new CommentController(commentRepository);
-    let mockRequest: Partial<Request> = {body: {}};
+    let mockRequest: Partial<Request> = {body: {}, params: {}};
     let mockResponse: Partial<Response> = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -156,5 +158,74 @@ describe('CommentController tests', () => {
             });
         });
         
+    });
+
+    describe('deleteComment()', () => {
+        test('should return a 200 status when a comment is deleted successfully', async () => {
+            mockRequest.params = {commentId: String(commentObj.id)};
+
+            (prisma.comment.findFirst as jest.Mock).mockResolvedValue(commentObj);
+            (prisma.comment.update as jest.Mock).mockResolvedValue({...commentObj, deletedAt: new Date().toDateString()});
+
+            await new Promise<void>((resolve) => {
+                commentController.deleteComment(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: true,
+                message: COMMENT_RESPONSE.SUCCESS.DELETE,
+                data: {
+                    id: commentObj.id,
+                    deletedAt: expect.any(String),
+                    content: commentObj.content,
+                }
+            });
+        });
+        test('should throw a 400 status error if commentId is undefined', async () => {
+            mockRequest.params = {};
+            
+            await new Promise<void>((resolve) => {
+                commentController.deleteComment(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: COMMENT_RESPONSE.ERRORS.DELETE}
+            });
+        });
+        test('should throw a 400 status error if commentId is not a number', async () => {
+            mockRequest.params = {commentId: 'abc'};
+            
+            await new Promise<void>((resolve) => {
+                commentController.deleteComment(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: COMMENT_RESPONSE.ERRORS.DELETE}
+            });
+        });
+        test('should throw a 400 status error if comment with provided ID does not exist', async () => {
+            mockRequest.params = {commentId: String(commentObj.id)};
+
+            (prisma.comment.findFirst as jest.Mock).mockResolvedValue(null);
+
+            await new Promise<void>((resolve) => {
+                commentController.deleteComment(mockRequest as Request, mockResponse as Response);
+                setImmediate(resolve);
+            });
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith({
+                success: false,
+                error: {message: `Comment with id ${commentObj.id} does not exist`}
+            });
+        });
     });
 });
