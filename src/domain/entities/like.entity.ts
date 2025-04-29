@@ -14,4 +14,12 @@ export class LikeEntity {
             likeObject.blogId,
         );
     };
+
+    public toJSON(){
+        return{
+            id: this.id,
+            blogId: this.blogId,
+            userId: this.userId
+        };
+    }
 }

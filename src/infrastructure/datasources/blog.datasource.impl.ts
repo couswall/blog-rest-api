@@ -1,7 +1,7 @@
 import { prisma } from "@/data/postgres";
 import { BlogDatasource } from "@/domain/datasources/blog.datasource";
 import { CreateBlogDto, UpdateBlogDto } from "@/domain/dtos/blogs";
-import { BlogEntity, CategoryEntity, UserEntity } from "@/domain/entities";
+import { BlogEntity, CategoryEntity, LikeEntity, UserEntity } from "@/domain/entities";
 import { CustomError } from "@/domain/errors/custom.error";
 import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 
@@ -58,7 +58,8 @@ export class BlogDatasourceImpl implements BlogDatasource {
             ...existingBlog,
             author: UserEntity.fromObject(existingBlog.author),
             categories: existingBlog.categories.map(category => CategoryEntity.fromObject(category)),
-        })
+            likes: existingBlog.likes.map(like => LikeEntity.fromObject(like))
+        });
     };
 
     async updateById(updateBlogDto: UpdateBlogDto): Promise<BlogEntity> {
