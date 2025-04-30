@@ -1,6 +1,7 @@
-import { CategoryEntity, UserEntity } from "@/domain/entities";
+import { CategoryEntity, LikeEntity, UserEntity } from "@/domain/entities";
 import { existingCategories } from "tests/fixtures/category";
 import { userObjPrisma } from "tests/fixtures/user";
+import { likesPrismaArray } from "tests/fixtures/like";
 
 export const newBlogRequest = {
     title: 'New blog',
@@ -18,6 +19,7 @@ export const newBlogPrisma = {
     authorId: 1,
     categories: existingCategories,
     author: userObjPrisma,
+    likes: likesPrismaArray.map(like => LikeEntity.fromObject(like))
 };
 
 export const blogObj = {

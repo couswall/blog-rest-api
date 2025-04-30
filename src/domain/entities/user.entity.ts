@@ -20,18 +20,16 @@ export class UserEntity {
     ){};
     
     public static fromObject(object: ICreateUserEntity){
-        const {username, password, email, id, usernameUpdatedAt, deletedAt, blogs, comments, likes} = object;
-
         return new UserEntity(
-            id, 
-            username, 
-            email, 
-            password, 
-            usernameUpdatedAt,
-            deletedAt,
-            blogs || [],
-            comments || [],
-            likes || [],
+            object.id, 
+            object.username, 
+            object.email, 
+            object.password, 
+            object.usernameUpdatedAt,
+            object.deletedAt,
+            object.blogs ?? [],
+            object.comments ?? [],
+            object.likes ?? [],
         );
     }
 

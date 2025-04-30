@@ -6,7 +6,6 @@ import { BLOG_RESPONSE } from "@/infrastructure/constants/blog.constants";
 import { BlogDatasourceImpl } from "@/infrastructure/datasources/blog.datasource.impl";
 import { existingCategories, newBlogPrisma, newBlogRequest, updatedBlogReq, userObjPrisma } from "tests/fixtures";
 
-
 jest.mock('@/data/postgres', () => ({
     prisma: {
         user: {
@@ -94,7 +93,7 @@ describe('blog.datasource.impl test', () => {
                 include: {
                     categories: true, 
                     author: true,
-                    comments: true,
+                    comments: {where: {deletedAt: null}},
                     likes: true
                 }
             });
@@ -133,7 +132,7 @@ describe('blog.datasource.impl test', () => {
                     categories: {
                         set: dto!.categoriesIds.map(id => ({id})),
                     },
-                    updatedAt: new Date(),
+                    updatedAt: expect.any(Date),
                 },
                 include: {categories: true, author: true},
             });
