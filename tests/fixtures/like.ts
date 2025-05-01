@@ -12,3 +12,8 @@ export const likesPrismaArray = [
     {id: 2, userId: 2, blogId: 2},
     {id: 3, userId: 3, blogId: 1},
 ]
+
+export const likeObjPrisma = {
+    ...createDeleteLikeDtoObj,
+    id: 1,
+};
