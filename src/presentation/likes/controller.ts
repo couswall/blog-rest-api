@@ -3,7 +3,7 @@ import { CreateDeleteLikeDto } from "@/domain/dtos/like";
 import { CreateDeleteLike } from "@/domain/use-cases/like";
 import { LikeRepository } from "@/domain/repositories/like.repository";
 import { CustomError } from "@/domain/errors/custom.error";
-
+import { LIKE_RESPONSE } from "@/infrastructure/constants/like.constants";
 
 export class LikeController {
     constructor(
@@ -25,7 +25,7 @@ export class LikeController {
             .execute(dto!)
             .then(like => res.status(200).json({
                 success: true,
-                message: 'Like toggled succesfully',
+                message: LIKE_RESPONSE.SUCCESS.TOGGLE,
                 data: like.toJSON()
             }))
             .catch(error => CustomError.handleError(res, error))
