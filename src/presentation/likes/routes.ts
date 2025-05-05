@@ -14,6 +14,7 @@ export class LikeRoutes {
         const likeController = new LikeController(likeRepository);
 
         router.post('/toggleLike', validateJWT, likeController.toggleCreateDelete);
+        router.get('/getLikesByBlogId/:blogId', likeController.getLikesByBlogId);
 
         return router;
     }
