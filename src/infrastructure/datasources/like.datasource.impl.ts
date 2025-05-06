@@ -3,7 +3,7 @@ import { LikeDatasource } from "@/domain/datasources/like.datasource";
 import { CreateDeleteLikeDto } from "@/domain/dtos";
 import { LikeEntity } from "@/domain/entities";
 import { CustomError } from "@/domain/errors/custom.error";
-import { ILikesByBlogId } from "@/domain/interfaces/like.dto.interface";
+import { ILikesByBlogId, ILikesByUserId } from "@/domain/interfaces/like.dto.interface";
 
 export class LikeDatasourceImpl implements LikeDatasource{
     async toggleCreateDelete(createDeleteLikeDto: CreateDeleteLikeDto): Promise<LikeEntity> {
@@ -47,6 +47,33 @@ export class LikeDatasourceImpl implements LikeDatasource{
                 user: {select: {id: true, username: true}}
             },
             omit: {blogId: true, userId: true}
+        });
+
+        return likes;
+    }
+
+    async getLikesByUserId(userId: number): Promise<ILikesByUserId[]> {
+        const existingUser = await prisma.user.findFirst({
+            where: {id: userId, deletedAt: null},
+        });
+
+        if(!existingUser) throw new CustomError(`User with id ${userId} does not exist`);
+
+        const likes = await prisma.like.findMany({
+            where: {userId},
+            select: {
+                id: true,
+                blog: {
+                    select: {
+                        id: true, 
+                        title: true, 
+                        author: {select: {
+                            id: true,
+                            username: true,
+                        }}
+                    }
+                }
+            }
         });
 
         return likes;

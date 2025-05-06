@@ -15,6 +15,7 @@ export class LikeRoutes {
 
         router.post('/toggleLike', validateJWT, likeController.toggleCreateDelete);
         router.get('/getLikesByBlogId/:blogId', likeController.getLikesByBlogId);
+        router.get('/getLikesByUserId/:userId', validateJWT, likeController.getLikesByUserId);
 
         return router;
     }

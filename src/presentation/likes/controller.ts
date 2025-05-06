@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { CreateDeleteLikeDto } from "@/domain/dtos/like";
-import { CreateDeleteLike, GetLikesByBlogId } from "@/domain/use-cases/like";
+import { CreateDeleteLike, GetLikesByBlogId, GetLikesByUserId } from "@/domain/use-cases/like";
 import { LikeRepository } from "@/domain/repositories/like.repository";
 import { CustomError } from "@/domain/errors/custom.error";
 import { LIKE_RESPONSE } from "@/infrastructure/constants/like.constants";
@@ -57,4 +57,34 @@ export class LikeController {
             .catch(error => CustomError.handleError(res, error));
 
     }
+
+    public getLikesByUserId = (req: Request, res: Response) => {
+        const userId = +req.params.userId;
+        if(!userId || isNaN(userId)){
+            res.status(400).json({
+                success: false,
+                error: {
+                    message: LIKE_RESPONSE.ERRORS.LIKES_BY_USERID.NUMBER
+                }
+            });
+            return;
+        }
+        
+        new GetLikesByUserId(this.likeRepository)
+            .execute(userId)
+            .then(likes => res.status(200).json({
+                success: true,
+                message: `${LIKE_RESPONSE.SUCCESS.LIKES_BY_USERID} ${userId}`,
+                data: likes.map(like => ({
+                    ...like,
+                    blog: {
+                        id: like.blog.id,
+                        title: like.blog.title,
+                        authorId: like.blog.author.id,
+                        authorName: like.blog.author.username,
+                    }
+                })),
+            }))
+            .catch(error => CustomError.handleError(res, error));
+    };
 }
