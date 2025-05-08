@@ -7,6 +7,8 @@ import { createDeleteLikeDtoObj, likeEntity } from "tests/fixtures";
 describe('create-delete-like use-case tests', () => {
     const mockLikeRepository: jest.Mocked<LikeRepository> = {
         toggleCreateDelete: jest.fn(),
+        getLikesByBlogId: jest.fn(),
+        getLikesByUserId: jest.fn(),
     };
     beforeEach(() => {jest.clearAllMocks()});
 
